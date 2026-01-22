@@ -38,8 +38,12 @@ function App() {
     }, []);
 
     const handleUpload = (buffer) => {
-        setPdfBuffer(buffer);
-        setPdfFile(buffer); // react-pdf can take buffer directly
+        setPdfFile(buffer);
+        // Clone the buffer for pdf-lib operations to avoid "detached ArrayBuffer" errors
+        // (react-pdf might transfer the original buffer)
+        setPdfBuffer(buffer.slice(0));
+        setSignatureImage(null);
+        setSignaturePosition({ x: 0, y: 0 });
         setPageNumber(1); // Reset to first page
     };
 
