@@ -1,0 +1,65 @@
+import React, { useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+// import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+// import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+// Set worker source - essential for react-pdf
+// Using unpkg CDN for simplicity in MVP, version matches installed react-pdf (usually latest)
+// Ideally this should match the installed version dynamically, but for now hardcoded to a recent version is safe for MVP
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+const PDFViewer = ({ pdfFile, children }) => {
+    const [numPages, setNumPages] = useState(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageWidth, setPageWidth] = useState(600); // Default width
+
+    function onDocumentLoadSuccess({ numPages }) {
+        setNumPages(numPages);
+    }
+
+    return (
+        <div className="flex flex-col items-center">
+            <div className="border shadow-lg relative">
+                <Document
+                    file={pdfFile}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    className="flex justify-center"
+                >
+                    <Page
+                        pageNumber={pageNumber}
+                        width={pageWidth}
+                        renderTextLayer={false} // clean look
+                        renderAnnotationLayer={false}
+                    />
+                </Document>
+                {/* Overlay for signature placement */}
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                    {/* Children (DraggableSignature) will be rendered here with pointer-events-auto */}
+                    {children}
+                </div>
+            </div>
+
+            {numPages && (
+                <div className="mt-4 flex gap-4 items-center">
+                    <button
+                        disabled={pageNumber <= 1}
+                        onClick={() => setPageNumber(prev => prev - 1)}
+                        className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                    >
+                        Previous
+                    </button>
+                    <span>Page {pageNumber} of {numPages}</span>
+                    <button
+                        disabled={pageNumber >= numPages}
+                        onClick={() => setPageNumber(prev => prev + 1)}
+                        className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default PDFViewer;
