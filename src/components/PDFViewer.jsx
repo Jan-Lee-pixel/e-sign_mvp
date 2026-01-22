@@ -8,7 +8,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 // Ideally this should match the installed version dynamically, but for now hardcoded to a recent version is safe for MVP
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange }) => {
+const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange, onPageLoad }) => {
     const [numPages, setNumPages] = useState(null);
     // pageNumber is now controlled by parent
     const [pageWidth, setPageWidth] = useState(600); // Default width
@@ -30,6 +30,9 @@ const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange }) => {
                         width={pageWidth}
                         renderTextLayer={false} // clean look
                         renderAnnotationLayer={false}
+                        onLoadSuccess={(page) => {
+                            if (onPageLoad) onPageLoad(page);
+                        }}
                     />
                 </Document>
                 {/* Overlay for signature placement */}

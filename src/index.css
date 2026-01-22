@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+@import "tailwindcss";
 
 :root {
     /* Windows 7 Aero Color Palette */
@@ -163,6 +163,22 @@ a,
 input,
 textarea {
     transition: all 0.15s ease;
+}
+
+
+/* Additional Win7 Redesign Classes */
+.win7-aero-glass {
+    background: linear-gradient(180deg, rgba(20, 60, 140, 0.85) 0%, rgba(10, 40, 100, 0.9) 100%);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.win7-wallpaper-pattern {
+    background-color: #5578a2;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 20%);
 }
 
 *:focus-visible {
