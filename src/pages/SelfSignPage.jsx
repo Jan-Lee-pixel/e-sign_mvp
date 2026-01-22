@@ -15,6 +15,25 @@ function SelfSignPage({ session }) {
     const [pdfFile, setPdfFile] = useState(null);
     const [pdfBuffer, setPdfBuffer] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
+    const [pageDimensions, setPageDimensions] = useState(null);
+
+    const handlePageLoad = (page) => {
+        const originalWidth = page.originalWidth;
+        const originalHeight = page.originalHeight;
+        const rotation = page.rotate || 0;
+        let validWidth = originalWidth;
+        let validHeight = originalHeight;
+
+        if (rotation === 90 || rotation === 270) {
+            validWidth = originalHeight;
+            validHeight = originalWidth;
+        }
+
+        const aspectRatio = validWidth / validHeight;
+        const renderedHeight = 600 / aspectRatio;
+
+        setPageDimensions({ width: 600, height: renderedHeight });
+    };
 
     // Array for signatures: { id, image, x, y, page }
     const [signatures, setSignatures] = useState([]);
