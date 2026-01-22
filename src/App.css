@@ -1,42 +1,55 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Windows 7 Component Styles */
+
+.win7-window-container {
+  background: var(--win7-window);
+  border: 1px solid var(--win7-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.win7-window-title {
+  background: linear-gradient(180deg, #ffffff 0%, #e5e5e5 100%);
+  border-bottom: 1px solid #adadad;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-radius: 4px 4px 0 0;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Upload Area */
+.win7-upload {
+  border: 2px dashed #bbb;
+  background: #fafafa;
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.win7-upload:hover {
+  border-color: var(--aero-blue);
+  background: #f0f8ff;
 }
 
-.card {
-  padding: 2em;
+/* PDF Viewer */
+.win7-pdf-container {
+  border: 1px solid var(--win7-border);
+  background: white;
+  box-shadow: var(--shadow-md);
 }
 
-.read-the-docs {
-  color: #888;
+/* Menu Dropdown */
+.win7-menu {
+  background: var(--win7-window);
+  border: 1px solid var(--win7-border);
+  box-shadow: var(--shadow-lg);
+  border-radius: 2px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.win7-menu-item {
+  padding: 6px 12px;
+  transition: background 0.1s ease;
+}
+
+.win7-menu-item:hover {
+  background: linear-gradient(90deg, #e8f4fd 0%, #d0e9f7 100%);
 }

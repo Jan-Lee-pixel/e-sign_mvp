@@ -16,11 +16,11 @@ const PDFUploader = ({ onUpload }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors cursor-pointer bg-gray-50 hover:bg-gray-100">
+        <div className="win7-upload text-center py-12 px-6">
             <label htmlFor="pdf-upload" className="cursor-pointer flex flex-col items-center">
-                <Upload className="w-12 h-12 text-gray-400 mb-2" />
-                <span className="text-lg font-medium text-gray-700">Click to upload PDF</span>
-                <span className="text-sm text-gray-500">or drag and drop</span>
+                <Upload className="w-16 h-16 text-gray-400 mb-4" />
+                <span className="text-lg font-semibold text-gray-700 mb-1">Upload PDF Document</span>
+                <span className="text-sm text-gray-500">Click to browse for a file</span>
                 <input
                     id="pdf-upload"
                     type="file"

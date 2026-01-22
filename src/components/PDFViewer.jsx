@@ -40,19 +40,21 @@ const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange }) => {
             </div>
 
             {numPages && (
-                <div className="mt-4 flex gap-4 items-center">
+                <div className="flex gap-3 items-center justify-center mt-4">
                     <button
                         disabled={pageNumber <= 1}
                         onClick={() => onPageChange(pageNumber - 1)}
-                        className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                        className="win7-button px-4 py-1.5 rounded text-sm font-semibold disabled:opacity-40"
                     >
                         Previous
                     </button>
-                    <span>Page {pageNumber} of {numPages}</span>
+                    <span className="text-sm font-semibold text-gray-700">
+                        Page {pageNumber} of {numPages}
+                    </span>
                     <button
                         disabled={pageNumber >= numPages}
                         onClick={() => onPageChange(pageNumber + 1)}
-                        className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                        className="win7-button px-4 py-1.5 rounded text-sm font-semibold disabled:opacity-40"
                     >
                         Next
                     </button>

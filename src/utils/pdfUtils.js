@@ -99,21 +99,6 @@ export async function embedSignature({
         // Logic already correct above
     }
 
-    console.log("Debugging embedSignature:", {
-        pdfWidth: width,
-        pdfHeight: height,
-        rotation,
-        effectiveWidth,
-        scale,
-        uiPos: position,
-        scaledX,
-        scaledY,
-        pdfX,
-        pdfDrawY,
-        pdfSignatureWidth,
-        pdfSignatureHeight
-    });
-
     const drawOptions = {
         x: pdfX,
         y: pdfDrawY,

@@ -7,6 +7,7 @@ import AuthPage from './components/AuthPage';
 import { embedSignature } from './utils/pdfUtils';
 import { supabase } from './lib/supabase';
 import { PenTool, Download, LogOut, User, Settings, Menu } from 'lucide-react';
+import './App.css';
 
 function App() {
     const [session, setSession] = useState(null);
@@ -54,7 +55,6 @@ function App() {
 
         setIsProcessing(true);
         try {
-            console.log("Starting download with position:", signaturePosition);
             const signedPdfBytes = await embedSignature({
                 pdfBuffer,
                 signatureImage,
@@ -92,51 +92,42 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
-            <header className="bg-white shadow p-4">
-                <div className="container mx-auto flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <PenTool className="text-blue-600" />
+        <div className="min-h-screen bg-[#ededed] flex flex-col">
+            {/* Windows 7 Taskbar-style Header */}
+            <header className="win7-taskbar">
+                <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+                    {/* Logo */}
+                    <h1 className="text-white font-semibold text-lg flex items-center gap-2">
+                        <PenTool className="w-5 h-5" />
                         E-Sign
                     </h1>
 
-                    <div className="flex items-center gap-4">
+                    {/* Actions */}
+                    <div className="flex items-center gap-3">
                         {pdfFile && (
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setIsSignatureModalOpen(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                                    disabled={!!signatureImage} // Disable if already signed (MVP constraint: 1 signature)
-                                >
-                                    {signatureImage ? "Signature Added" : "Add Signature"}
-                                </button>
-                                {signatureImage && (
-                                    <button
-                                        onClick={handleDownload}
-                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center gap-2"
-                                        disabled={isProcessing}
-                                    >
-                                        <Download size={18} />
-                                        {isProcessing ? "Processing..." : "Download PDF"}
-                                    </button>
-                                )}
-                            </div>
+                            <button
+                                onClick={() => setIsSignatureModalOpen(true)}
+                                className="win7-button-primary px-4 py-1.5 rounded text-sm font-semibold disabled:opacity-50"
+                                disabled={!!signatureImage}
+                            >
+                                {signatureImage ? "Signature Added" : "Add Signature"}
+                            </button>
                         )}
 
+                        {/* User Menu */}
                         <div className="relative">
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                title="User Menu"
+                                className="win7-button px-3 py-1.5 rounded text-sm font-semibold"
                             >
-                                <Menu size={24} />
+                                <Menu size={16} />
                             </button>
 
                             {isMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
-                                    <div className="px-4 py-3 border-b border-gray-100">
-                                        <p className="text-sm text-gray-500">Signed in as</p>
-                                        <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.email}</p>
+                                <div className="win7-menu absolute right-0 mt-2 w-48 py-1 z-50">
+                                    <div className="px-3 py-2 border-b border-gray-300">
+                                        <p className="text-xs text-gray-600">Signed in</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{session?.user?.email}</p>
                                     </div>
 
                                     <button
@@ -144,9 +135,9 @@ function App() {
                                             setIsMenuOpen(false);
                                             alert("Profile Settings - Coming Soon");
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        className="win7-menu-item w-full text-left text-sm flex items-center gap-2"
                                     >
-                                        <User size={16} />
+                                        <User size={14} />
                                         Profile
                                     </button>
 
@@ -155,22 +146,24 @@ function App() {
                                             setIsMenuOpen(false);
                                             alert("App Settings - Coming Soon");
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        className="win7-menu-item w-full text-left text-sm flex items-center gap-2"
                                     >
-                                        <Settings size={16} />
+                                        <Settings size={14} />
                                         Settings
                                     </button>
 
-                                    <button
-                                        onClick={() => {
-                                            setIsMenuOpen(false);
-                                            handleSignOut();
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100"
-                                    >
-                                        <LogOut size={16} />
-                                        Sign Out
-                                    </button>
+                                    <div className="border-t border-gray-300 mt-1 pt-1">
+                                        <button
+                                            onClick={() => {
+                                                setIsMenuOpen(false);
+                                                handleSignOut();
+                                            }}
+                                            className="win7-menu-item w-full text-left text-sm flex items-center gap-2 text-red-600"
+                                        >
+                                            <LogOut size={14} />
+                                            Sign Out
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -178,37 +171,60 @@ function App() {
                 </div>
             </header>
 
-            <main className="flex-grow container mx-auto p-8 flex justify-center">
+            {/* Main Content */}
+            <main className="flex-grow container mx-auto p-6 flex justify-center fade-in">
                 {!pdfFile ? (
-                    <div className="w-full max-w-2xl mt-10">
-                        <div className="bg-white p-10 rounded shadow-md text-center">
-                            <h2 className="text-2xl font-semibold mb-6">Upload a document to sign</h2>
-                            <PDFUploader onUpload={handleUpload} />
+                    <div className="w-full max-w-2xl mt-12">
+                        <div className="win7-window-container">
+                            <div className="win7-window-title">
+                                Upload Document
+                            </div>
+                            <div className="p-8">
+                                <PDFUploader onUpload={handleUpload} />
+                            </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="w-full max-w-4xl flex justify-center">
-                        <PDFViewer
-                            pdfFile={pdfFile}
-                            pageNumber={pageNumber}
-                            onPageChange={setPageNumber}
-                        >
-                            {signatureImage && (
-                                <DraggableSignature
-                                    imageSrc={signatureImage}
-                                    initialPosition={signaturePosition}
-                                    onPositionChange={setSignaturePosition}
-                                    onDelete={() => {
-                                        setSignatureImage(null);
-                                        setSignaturePosition({ x: 0, y: 0 });
-                                    }}
-                                />
-                            )}
-                        </PDFViewer>
+                    <div className="w-full max-w-5xl">
+                        <div className="win7-window-container">
+                            <div className="win7-window-title flex justify-between items-center">
+                                <span>Document Viewer</span>
+                                {signatureImage && (
+                                    <button
+                                        onClick={handleDownload}
+                                        className="win7-button-primary px-4 py-1 rounded text-xs font-semibold disabled:opacity-50 flex items-center gap-1"
+                                        disabled={isProcessing}
+                                    >
+                                        <Download size={14} />
+                                        {isProcessing ? "Processing..." : "Download"}
+                                    </button>
+                                )}
+                            </div>
+                            <div className="p-4">
+                                <PDFViewer
+                                    pdfFile={pdfFile}
+                                    pageNumber={pageNumber}
+                                    onPageChange={setPageNumber}
+                                >
+                                    {signatureImage && (
+                                        <DraggableSignature
+                                            imageSrc={signatureImage}
+                                            initialPosition={signaturePosition}
+                                            onPositionChange={setSignaturePosition}
+                                            onDelete={() => {
+                                                setSignatureImage(null);
+                                                setSignaturePosition({ x: 0, y: 0 });
+                                            }}
+                                        />
+                                    )}
+                                </PDFViewer>
+                            </div>
+                        </div>
                     </div>
                 )}
             </main>
 
+            {/* Signature Modal */}
             {isSignatureModalOpen && (
                 <SignaturePad
                     onSave={handleSignatureSave}

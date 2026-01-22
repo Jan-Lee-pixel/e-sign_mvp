@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import { X, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const SignaturePad = ({ onSave, onCancel }) => {
     const sigCanvas = useRef({});
@@ -12,46 +12,51 @@ const SignaturePad = ({ onSave, onCancel }) => {
             alert("Please provide a signature first.");
             return;
         }
-        // 'getTrimmedCanvas' usage causing issues with current bundler/version setup.
-        // Using 'getCanvas' as fallback.
         const dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');
         onSave(dataURL);
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white p-4 rounded-lg shadow-xl w-full max-w-md">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Sign Here</h3>
-                    <button onClick={onCancel} className="text-gray-500 hover:text-gray-700">
-                        <X size={24} />
+        <div className="win7-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="aero-glass rounded w-full max-w-lg">
+                {/* Title Bar */}
+                <div className="win7-window-title flex justify-between items-center">
+                    <span>Create Signature</span>
+                    <button
+                        onClick={onCancel}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        <X size={20} />
                     </button>
                 </div>
 
-                <div className="border border-gray-300 rounded mb-4">
-                    <SignatureCanvas
-                        ref={sigCanvas}
-                        penColor="black"
-                        canvasProps={{
-                            className: 'sigCanvas w-full h-48',
-                        }}
-                    />
-                </div>
+                {/* Content */}
+                <div className="p-6">
+                    <div className="border-2 border-gray-300 rounded bg-white mb-4">
+                        <SignatureCanvas
+                            ref={sigCanvas}
+                            penColor="black"
+                            canvasProps={{
+                                className: 'w-full h-48',
+                            }}
+                        />
+                    </div>
 
-                <div className="flex justify-end gap-2">
-                    <button
-                        onClick={clear}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-                    >
-                        Clear
-                    </button>
-                    <button
-                        onClick={save}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
-                    >
-                        <Check size={18} />
-                        Use Signature
-                    </button>
+                    {/* Actions */}
+                    <div className="flex justify-end gap-2">
+                        <button
+                            onClick={clear}
+                            className="win7-button px-4 py-2 rounded text-sm font-semibold"
+                        >
+                            Clear
+                        </button>
+                        <button
+                            onClick={save}
+                            className="win7-button-primary px-4 py-2 rounded text-sm font-semibold"
+                        >
+                            Use Signature
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
