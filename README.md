@@ -1,16 +1,59 @@
-# React + Vite
+# E-Sign MVP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple, fast, and secure PDF e-signing application built with React, Vite, and Supabase.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+-   **PDF Upload**: Easily upload PDF documents.
+-   **PDF Viewing**: View PDFs directly in the browser.
+-   **Signature Creation**: Draw your signature using a signature pad.
+-   **Drag & Drop**: Place your signature exactly where you want it on the document.
+-   **Download**: Download the signed PDF with your signature embedded.
+-   **Authentication**: Secure user authentication powered by Supabase.
 
-## React Compiler
+## Technology Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-   **Frontend**: React, Vite
+-   **Styling**: Tailwind CSS
+-   **Icons**: Lucide React
+-   **PDF Handling**: react-pdf, pdf-lib
+-   **Drag & Drop**: react-draggable
+-   **Signature Pad**: react-signature-canvas
+-   **Backend/Auth**: Supabase
 
-## Expanding the ESLint configuration
+## Setup Instructions
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1.  **Clone the repository**:
+    ```bash
+    git clone <repository-url>
+    cd <repository-directory>
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup**:
+    Create a `.env` file in the root directory (copy from `.env.example` if available) and add your Supabase credentials:
+    ```env
+    VITE_SUPABASE_URL=your_supabase_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
+
+4.  **Run the application**:
+    ```bash
+    npm run dev
+    ```
+
+## Usage
+
+1.  **Sign In/Sign Up**: Create an account or log in.
+2.  **Upload**: Click the upload area to select a PDF file.
+3.  **Sign**: Click "Add Signature" to draw your signature.
+4.  **Place**: Drag the signature to the desired location on the PDF.
+5.  **Download**: Click "Download PDF" to save the signed document.
+
+## License
+
+MIT

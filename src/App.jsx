@@ -14,6 +14,7 @@ function App() {
 
     const [pdfFile, setPdfFile] = useState(null);
     const [pdfBuffer, setPdfBuffer] = useState(null); // Keep original buffer
+    const [pageNumber, setPageNumber] = useState(1);
     const [signatureImage, setSignatureImage] = useState(null);
     const [signaturePosition, setSignaturePosition] = useState({ x: 0, y: 0 });
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
@@ -38,6 +39,7 @@ function App() {
     const handleUpload = (buffer) => {
         setPdfBuffer(buffer);
         setPdfFile(buffer); // react-pdf can take buffer directly
+        setPageNumber(1); // Reset to first page
     };
 
     const handleSignatureSave = (dataURL) => {
@@ -52,11 +54,12 @@ function App() {
 
         setIsProcessing(true);
         try {
+            console.log("Starting download with position:", signaturePosition);
             const signedPdfBytes = await embedSignature({
                 pdfBuffer,
                 signatureImage,
                 position: signaturePosition,
-                pageIndex: 0, // MVP: Only sign first page for now
+                pageIndex: pageNumber - 1, // Use current page index
                 visualWidth: 600, // Matching PDFViewer default width
             });
 
@@ -185,7 +188,11 @@ function App() {
                     </div>
                 ) : (
                     <div className="w-full max-w-4xl flex justify-center">
-                        <PDFViewer pdfFile={pdfFile}>
+                        <PDFViewer
+                            pdfFile={pdfFile}
+                            pageNumber={pageNumber}
+                            onPageChange={setPageNumber}
+                        >
                             {signatureImage && (
                                 <DraggableSignature
                                     imageSrc={signatureImage}

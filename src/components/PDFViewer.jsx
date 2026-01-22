@@ -8,9 +8,9 @@ import { Document, Page, pdfjs } from 'react-pdf';
 // Ideally this should match the installed version dynamically, but for now hardcoded to a recent version is safe for MVP
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const PDFViewer = ({ pdfFile, children }) => {
+const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange }) => {
     const [numPages, setNumPages] = useState(null);
-    const [pageNumber, setPageNumber] = useState(1);
+    // pageNumber is now controlled by parent
     const [pageWidth, setPageWidth] = useState(600); // Default width
 
     function onDocumentLoadSuccess({ numPages }) {
@@ -33,7 +33,7 @@ const PDFViewer = ({ pdfFile, children }) => {
                     />
                 </Document>
                 {/* Overlay for signature placement */}
-                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
                     {/* Children (DraggableSignature) will be rendered here with pointer-events-auto */}
                     {children}
                 </div>
@@ -43,7 +43,7 @@ const PDFViewer = ({ pdfFile, children }) => {
                 <div className="mt-4 flex gap-4 items-center">
                     <button
                         disabled={pageNumber <= 1}
-                        onClick={() => setPageNumber(prev => prev - 1)}
+                        onClick={() => onPageChange(pageNumber - 1)}
                         className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
                     >
                         Previous
@@ -51,7 +51,7 @@ const PDFViewer = ({ pdfFile, children }) => {
                     <span>Page {pageNumber} of {numPages}</span>
                     <button
                         disabled={pageNumber >= numPages}
-                        onClick={() => setPageNumber(prev => prev + 1)}
+                        onClick={() => onPageChange(pageNumber + 1)}
                         className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
                     >
                         Next

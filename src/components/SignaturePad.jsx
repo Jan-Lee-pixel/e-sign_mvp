@@ -12,7 +12,9 @@ const SignaturePad = ({ onSave, onCancel }) => {
             alert("Please provide a signature first.");
             return;
         }
-        const dataURL = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+        // 'getTrimmedCanvas' usage causing issues with current bundler/version setup.
+        // Using 'getCanvas' as fallback.
+        const dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');
         onSave(dataURL);
     };
 

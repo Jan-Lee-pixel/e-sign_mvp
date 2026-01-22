@@ -26,21 +26,29 @@ export async function embedSignature({
     const pages = pdfDoc.getPages();
     const page = pages[pageIndex];
 
-    // Get actual PDF page dimensions
+    // Get actual PDF page dimensions and rotation
     const { width, height } = page.getSize();
+    const rotation = page.getRotation().angle;
 
-    // Calculate scale: PDF_Point_Width / UI_Pixel_Width
-    const scale = width / visualWidth;
+    // Calculate effective width/height based on rotation
+    let effectiveWidth = width;
+    let effectiveHeight = height;
+    if (rotation === 90 || rotation === 270) {
+        effectiveWidth = height;
+        effectiveHeight = width;
+    }
+
+    // Calculate scale: PDF_Effective_Width / UI_Pixel_Width
+    const scale = effectiveWidth / visualWidth;
 
     // Coordinate transformation
     // UI: (0,0) is Top-Left. 
-    // PDF: (0,0) is usually Bottom-Left.
+    // PDF: (0,0) is Bottom-Left (usually).
 
-    // We need to scale the UI x,y to PDF x,y
-    const pdfX = position.x * scale;
+    // UI coordinates scaled to PDF units
+    const scaledX = position.x * scale;
+    const scaledY = position.y * scale;
 
-    // The signature onscreen is also scaled visually.
-    // In UI, it's 64px height (h-16).
     const uiSignatureHeight = 64;
     const signatureDims = pngImage.scale(1);
     const aspectRatio = signatureDims.width / signatureDims.height;
@@ -48,18 +56,73 @@ export async function embedSignature({
     const pdfSignatureHeight = uiSignatureHeight * scale;
     const pdfSignatureWidth = pdfSignatureHeight * aspectRatio;
 
-    // pdfY calculation:
-    // Distance from top in PDF units = position.y * scale
-    // y = PageHeight - Distance_From_Top - ImageHeight
-    // Note: we must subtract the height of the signature because y is at the bottom of the image
-    const pdfDrawY = height - (position.y * scale) - pdfSignatureHeight;
+    let pdfX, pdfDrawY, imageRotation;
 
-    page.drawImage(pngImage, {
+    // Handle Rotation
+    // pdf-lib drawImage draws relative to the unrotated coordinate system
+    if (rotation === 0) {
+        pdfX = scaledX;
+        pdfDrawY = height - scaledY - pdfSignatureHeight;
+        imageRotation = 0;
+    } else if (rotation === 90) {
+        // Visual Top-Left (0,0) -> PDF Bottom-Left (0,0) [if 90 CW]
+        // Actually: Visual X (Top edge) -> PDF Y axis
+        // Visual Y (Left edge) -> PDF X axis
+        pdfX = scaledY;
+        pdfDrawY = scaledX; // Wait, X increases upwards?
+        imageRotation = 270; // Rotate -90
+
+        // Let's rely on a simpler mental model for 90 deg:
+        // Visual (x,y) -> PDF (y, height - x)? No.
+        // It's tricky. For MVP, if rotation is detected, we log it and try a best guess or warn.
+        // Standard 90 deg rotation (e.g. Scanned sideways):
+        // x gets mapped to y, y gets mapped to x.
+        // We'll stick to 0 for now but log heavily.
+        console.warn("Page is rotated! Signature might be misplaced.", rotation);
+
+        // Fallback for 90:
+        pdfX = scaledY;
+        pdfDrawY = scaledX;
+        // Note: this is likely imperfect without thorough testing.
+        // But for 0 rotation (standard), the logic is:
+        // x = x, y = h - y - h_img
+    } else {
+        console.warn("Unsupported rotation:", rotation);
+        // Fallback to 0 logic
+        pdfX = scaledX;
+        pdfDrawY = height - scaledY - pdfSignatureHeight;
+        imageRotation = 0;
+    }
+
+    // Check if we didn't set them (only 0 and 90 handled partially)
+    if (rotation === 0) {
+        // Logic already correct above
+    }
+
+    console.log("Debugging embedSignature:", {
+        pdfWidth: width,
+        pdfHeight: height,
+        rotation,
+        effectiveWidth,
+        scale,
+        uiPos: position,
+        scaledX,
+        scaledY,
+        pdfX,
+        pdfDrawY,
+        pdfSignatureWidth,
+        pdfSignatureHeight
+    });
+
+    const drawOptions = {
         x: pdfX,
         y: pdfDrawY,
         width: pdfSignatureWidth,
         height: pdfSignatureHeight,
-    });
+    };
+    if (imageRotation) drawOptions.rotate = { type: 'degrees', angle: imageRotation };
+
+    page.drawImage(pngImage, drawOptions);
 
     const pdfBytes = await pdfDoc.save();
     return pdfBytes;

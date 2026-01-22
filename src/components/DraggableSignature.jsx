@@ -6,16 +6,18 @@ const DraggableSignature = ({ imageSrc, onPositionChange, onDelete, initialPosit
     // We use local state for immediate feedback, but the parent should ideally hold the truth
     // react-draggable manages its own position visually if we don't control it fully, 
     // but to extract final coordinates we need the onStop callback.
+    const nodeRef = React.useRef(null);
 
     return (
         <Draggable
+            nodeRef={nodeRef}
             defaultPosition={initialPosition}
             bounds="parent"
             onStop={(e, data) => {
                 onPositionChange({ x: data.x, y: data.y });
             }}
         >
-            <div className="absolute cursor-move group inline-block hover:outline hover:outline-2 hover:outline-blue-400 hover:outline-dashed pointer-events-auto">
+            <div ref={nodeRef} className="absolute cursor-move group inline-block hover:outline hover:outline-2 hover:outline-blue-400 hover:outline-dashed pointer-events-auto" style={{ zIndex: 50 }}>
                 <img
                     src={imageSrc}
                     alt="Signature"
