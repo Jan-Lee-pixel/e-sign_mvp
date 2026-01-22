@@ -12,17 +12,21 @@ const ComposePage = () => {
     const [pdfBuffer, setPdfBuffer] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageDimensions, setPageDimensions] = useState(null);
-    const [fieldPosition, setFieldPosition] = useState(null); // { x, y } in pixels
+
+    // Array for multiple fields: { id, x, y, page }
+    const [fields, setFields] = useState([]);
+
     const [isSending, setIsSending] = useState(false);
     const [generatedLink, setGeneratedLink] = useState(null);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [error, setError] = useState(null);
 
     const handleUpload = (buffer) => {
-        setPdfFile(buffer);
+        // Clone for separate usage
+        setPdfFile(buffer.slice(0));
         setPdfBuffer(buffer.slice(0));
         setPageNumber(1);
-        setFieldPosition(null);
+        setFields([]);
         setGeneratedLink(null);
         setError(null);
     };
@@ -45,13 +49,39 @@ const ComposePage = () => {
         setPageDimensions({ width: 600, height: renderedHeight });
     };
 
+    const addField = () => {
+        const newField = {
+            id: crypto.randomUUID(),
+            x: 50,
+            y: 50,
+            page: pageNumber
+        };
+        setFields([...fields, newField]);
+    };
+
+    const updateFieldPosition = (id, newPos) => {
+        setFields(fields.map(f => f.id === id ? { ...f, x: newPos.x, y: newPos.y } : f));
+    };
+
+    const removeField = (id) => {
+        if (window.confirm("Remove this signature box?")) {
+            setFields(fields.filter(f => f.id !== id));
+        }
+    };
+
+    const clearAllFields = () => {
+        if (window.confirm("Clear all signature fields?")) {
+            setFields([]);
+        }
+    };
+
     const handleSend = async () => {
-        if (!pdfBuffer || !fieldPosition) return;
+        if (!pdfBuffer || fields.length === 0) return;
         setIsSending(true);
         setError(null);
 
         try {
-            // 1. Upload PDF to Supabase Storage
+            // 1. Upload PDF
             const fileName = `${crypto.randomUUID()}.pdf`;
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('envelopes')
@@ -61,10 +91,9 @@ const ComposePage = () => {
                 });
 
             if (uploadError) throw uploadError;
-
             const pdfPath = uploadData.path;
 
-            // 2. Insert into envelopes
+            // 2. Insert Envelope
             const accessToken = crypto.randomUUID();
             const { data: envelopeData, error: envelopeError } = await supabase
                 .from('envelopes')
@@ -81,197 +110,204 @@ const ComposePage = () => {
 
             if (envelopeError) throw envelopeError;
 
-            // 3. Insert into fields
+            // 3. Insert Fields
             if (!pageDimensions) throw new Error("Page dimensions not loaded");
 
-            const xPct = (fieldPosition.x / pageDimensions.width) * 100;
-            const yPct = (fieldPosition.y / pageDimensions.height) * 100;
+            const fieldsToInsert = fields.map(f => ({
+                envelope_id: envelopeData.id,
+                page_number: f.page,
+                x_pct: (f.x / pageDimensions.width) * 100,
+                y_pct: (f.y / pageDimensions.height) * 100
+            }));
 
             const { error: fieldsError } = await supabase
                 .from('fields')
-                .insert([
-                    {
-                        envelope_id: envelopeData.id,
-                        page_number: pageNumber,
-                        x_pct: xPct,
-                        y_pct: yPct
-                    }
-                ]);
+                .insert(fieldsToInsert);
 
             if (fieldsError) throw fieldsError;
 
             setGeneratedLink(`${window.location.origin}/sign/${accessToken}`);
 
         } catch (err) {
-            console.error(err); y
+            console.error(err);
             setError(err.message || "Failed to send envelope");
         } finally {
             setIsSending(false);
         }
     };
 
-    // --- REPLACED: NEW EMAILJS LOGIC ---
     const handleSendEmail = async (recipientEmail, customMessage) => {
         try {
             if (!generatedLink) {
-                alert("Error: No link generated yet. Please click 'Generate Link' first.");
+                alert("Error: No link generated yet.");
                 return;
             }
 
-            // Maps to the variables in your EmailJS Template
             const templateParams = {
-                to_email: recipientEmail,  // Make sure template uses {{to_email}}
-                link: generatedLink,       // Make sure template uses {{link}}
-                message: customMessage     // Make sure template uses {{message}}
+                to_email: recipientEmail,
+                link: generatedLink,
+                message: customMessage
             };
 
             await emailjs.send(
-                'service_3l72yzv',   // <--- PASTE SERVICE ID HERE (e.g. service_xyz)
-                'template_dupsafc',  // <--- PASTE TEMPLATE ID HERE (e.g. template_abc)
+                'service_3l72yzv',
+                'template_dupsafc',
                 templateParams,
-                'YAzn6fbluRSwQnvsG'    // <--- PASTE PUBLIC KEY HERE (e.g. user_123)
+                'YAzn6fbluRSwQnvsG'
             );
 
             alert("Email sent successfully!");
-            setIsEmailModalOpen(false); // Close the modal
+            setIsEmailModalOpen(false);
         } catch (err) {
             console.error("Error sending email:", err);
-            alert("Failed to send email. Check console for details.");
+            alert("Failed to send email.");
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#ededed] flex flex-col fade-in">
-            <header className="win7-taskbar">
-                <div className="container mx-auto px-4 py-2 flex justify-between items-center">
-                    <h1 className="text-white font-semibold text-lg flex items-center gap-2">
-                        <PenTool className="w-5 h-5" />
-                        QuickSign - Compose
-                    </h1>
+        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#ededed] font-segoe">
+            {/* Header */}
+            <header className="h-16 bg-[#1853db] text-white flex items-center justify-between px-4 shadow-md z-50 shrink-0 win7-aero-glass">
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h1 className="text-lg font-semibold flex items-center gap-2 text-white text-shadow-sm">
+                            <PenTool className="w-5 h-5" />
+                            <span>E-Sign Compose</span>
+                        </h1>
+                        <p className="text-xs text-blue-100 opacity-80">Prepare Envelope</p>
+                    </div>
                 </div>
             </header>
 
-            <main className="flex-grow container mx-auto p-6 flex justify-center">
-                {!pdfFile ? (
-                    <div className="w-full max-w-2xl mt-12">
-                        <div className="win7-window-container">
-                            <div className="win7-window-title">New Envelope</div>
-                            <div className="p-8">
-                                <PDFUploader onUpload={handleUpload} />
-                            </div>
-                        </div>
+            <div className="flex-1 flex overflow-hidden">
+                {/* Sidebar */}
+                <aside className="w-80 bg-[#f0f0f0] border-r border-[#999999] flex flex-col shrink-0 relative z-40">
+                    <div className="p-4 bg-gradient-to-b from-white to-[#e6e6e6] border-b border-[#b5b5b5]">
+                        <h2 className="text-[#1e395b] font-bold text-sm">Tools</h2>
                     </div>
-                ) : (
-                    <div className="flex gap-6 w-full max-w-6xl items-start">
-                        {/* Left: PDF Viewer */}
-                        <div className="flex-grow">
-                            <div className="win7-window-container">
-                                <div className="win7-window-title">Document Preview</div>
-                                <div className="p-4 bg-gray-100 min-h-[600px] flex justify-center">
+
+                    <div className="p-4 flex flex-col gap-6 overflow-y-auto flex-1">
+                        {!pdfFile ? (
+                            <div className="win7-window-container bg-white p-4">
+                                <h3 className="text-sm font-bold text-gray-700 mb-2">Step 1: Upload</h3>
+                                <div className="p-2 border border-dashed border-gray-400 bg-gray-50 rounded">
+                                    <PDFUploader onUpload={handleUpload} />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="win7-window-container bg-white p-4">
+                                    <h3 className="text-sm font-bold text-gray-700 mb-2">Signature Fields</h3>
+                                    <p className="text-xs text-gray-500 mb-3">Add boxes where the recipient should sign.</p>
+
+                                    <div className="flex gap-2 mb-2">
+                                        <button
+                                            onClick={addField}
+                                            className="flex-1 py-2 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded hover:bg-yellow-200 transition-colors flex items-center justify-center gap-2 font-semibold text-sm"
+                                        >
+                                            <PenTool size={14} />
+                                            Add Box
+                                        </button>
+                                        <button
+                                            onClick={clearAllFields}
+                                            disabled={fields.length === 0}
+                                            className="px-3 py-2 bg-red-100 border border-red-300 text-red-800 rounded hover:bg-red-200 transition-colors flex items-center justify-center disabled:opacity-50"
+                                            title="Clear All"
+                                        >
+                                            <span className="text-xs font-bold">×</span>
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-400 italic">Double-click a box on canvas to remove it.</p>
+                                </div>
+
+                                <div className="win7-window-container bg-white p-4">
+                                    <h3 className="text-sm font-bold text-gray-700 mb-2">Actions</h3>
+                                    <div className="flex flex-col gap-3">
+                                        {!generatedLink ? (
+                                            <button
+                                                onClick={handleSend}
+                                                disabled={fields.length === 0 || isSending}
+                                                className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded font-semibold shadow transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-green-600"
+                                            >
+                                                {isSending ? 'Sending...' : (
+                                                    <>
+                                                        <LinkIcon size={16} />
+                                                        Generate Link
+                                                    </>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <div className="bg-green-500/20 px-3 py-2 rounded text-sm border border-green-400/30 text-green-800 flex items-center gap-2">
+                                                    <CheckCircle size={14} />
+                                                    Link Ready!
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <input
+                                                        readOnly
+                                                        value={generatedLink}
+                                                        className="flex-grow border rounded px-2 py-1 text-xs bg-gray-50 text-gray-600"
+                                                    />
+                                                    <button
+                                                        onClick={() => navigator.clipboard.writeText(generatedLink)}
+                                                        className="bg-gray-200 hover:bg-gray-300 border border-gray-400 px-2 py-1 rounded"
+                                                        title="Copy"
+                                                    >
+                                                        <LinkIcon size={12} />
+                                                    </button>
+                                                </div>
+                                                <button
+                                                    onClick={() => setIsEmailModalOpen(true)}
+                                                    className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-semibold shadow transition-all flex items-center justify-center gap-2 border border-blue-600"
+                                                >
+                                                    <Send size={16} />
+                                                    Send Email
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </aside>
+
+                {/* Main Canvas */}
+                <main className="flex-1 bg-[#8c8c8c] overflow-auto flex justify-center p-8 relative win7-wallpaper-pattern shadow-inner">
+                    {pdfFile ? (
+                        <div className="relative h-fit my-auto shadow-2xl">
+                            <div className="win7-window-container p-0 overflow-hidden border-none ring-1 ring-black/20">
+                                <div className="bg-white">
                                     <PDFViewer
                                         pdfFile={pdfFile}
                                         pageNumber={pageNumber}
                                         onPageChange={setPageNumber}
                                         onPageLoad={handlePageLoad}
                                     >
-                                        {fieldPosition && (
-                                            <DraggablePlaceholder
-                                                initialPosition={fieldPosition}
-                                                onPositionChange={(pos) => setFieldPosition(pos)}
-                                            />
-                                        )}
+                                        {fields.map(field => {
+                                            if (field.page !== pageNumber) return null;
+                                            return (
+                                                <div key={field.id} onDoubleClick={() => removeField(field.id)}>
+                                                    <DraggablePlaceholder
+                                                        initialPosition={{ x: field.x, y: field.y }}
+                                                        onPositionChange={(pos) => updateFieldPosition(field.id, pos)}
+                                                        containerDimensions={pageDimensions}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
                                     </PDFViewer>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Right: Tools & Actions */}
-                        <div className="w-80 flex flex-col gap-4">
-                            <div className="win7-window-container">
-                                <div className="win7-window-title">Tools</div>
-                                <div className="p-4 flex flex-col gap-3">
-                                    <p className="text-sm text-gray-600 mb-2">Drag fields onto the document.</p>
-
-                                    <button
-                                        onClick={() => setFieldPosition({ x: 50, y: 50 })}
-                                        disabled={!!fieldPosition}
-                                        className="win7-button px-4 py-2 rounded text-sm font-semibold flex items-center gap-2 justify-center w-full disabled:opacity-50"
-                                    >
-                                        <PenTool size={16} />
-                                        Add Signature Box
-                                    </button>
-
-                                    {fieldPosition && (
-                                        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-xs text-yellow-800 flex items-start gap-2">
-                                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                                            <span>Position the box where you want the recipient to sign.</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="win7-window-container">
-                                <div className="win7-window-title">Actions</div>
-                                <div className="p-4 flex flex-col gap-3">
-                                    {!generatedLink ? (
-                                        <button
-                                            onClick={handleSend}
-                                            disabled={!fieldPosition || isSending}
-                                            className="win7-button-primary px-4 py-2 rounded text-sm font-semibold flex items-center gap-2 justify-center w-full disabled:opacity-50"
-                                        >
-                                            {isSending ? (
-                                                <span>Sending...</span>
-                                            ) : (
-                                                <>
-                                                    <LinkIcon size={16} />
-                                                    Generate Link
-                                                </>
-                                            )}
-                                        </button>
-                                    ) : (
-                                        <div className="flex flex-col gap-3">
-                                            <div className="bg-green-50 border border-green-200 p-3 rounded text-green-800 flex items-center gap-2">
-                                                <CheckCircle size={16} />
-                                                <span className="font-semibold text-sm">Ready to send!</span>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-xs font-semibold text-gray-500">Signing Link</label>
-                                                <div className="flex gap-1">
-                                                    <input
-                                                        readOnly
-                                                        value={generatedLink}
-                                                        className="flex-grow border rounded px-2 py-1 text-sm bg-gray-50 text-gray-600"
-                                                    />
-                                                    <button
-                                                        onClick={() => navigator.clipboard.writeText(generatedLink)}
-                                                        className="win7-button px-2 py-1 rounded"
-                                                        title="Copy"
-                                                    >
-                                                        <LinkIcon size={14} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => setIsEmailModalOpen(true)}
-                                                className="win7-button-primary px-4 py-2 rounded text-sm font-semibold flex items-center gap-2 justify-center w-full shadow-md"
-                                            >
-                                                <Send size={16} />
-                                                Send for Signature
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {error && (
-                                        <div className="bg-red-50 border border-red-200 p-3 rounded text-xs text-red-800">
-                                            {error}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-white/50">
+                            <div className="text-6xl font-light mb-4">↑</div>
+                            <p className="text-xl">Upload a PDF to get started</p>
                         </div>
-                    </div>
-                )}
-            </main>
+                    )}
+                </main>
+            </div>
 
             <EmailModal
                 isOpen={isEmailModalOpen}

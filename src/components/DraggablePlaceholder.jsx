@@ -2,14 +2,22 @@ import React, { useRef } from 'react';
 import Draggable from 'react-draggable';
 import { PenTool } from 'lucide-react';
 
-const DraggablePlaceholder = ({ onPositionChange, initialPosition = { x: 0, y: 0 } }) => {
+const DraggablePlaceholder = ({ onPositionChange, initialPosition = { x: 0, y: 0 }, containerDimensions }) => {
     const nodeRef = useRef(null);
+
+    // Calculate bounds if dimensions are known
+    const bounds = containerDimensions ? {
+        left: 0,
+        top: 0,
+        right: containerDimensions.width - 120, // 120 is width of box
+        bottom: containerDimensions.height - 50 // 50 is height of box
+    } : "parent"; // Fallback
 
     return (
         <Draggable
             nodeRef={nodeRef}
             defaultPosition={initialPosition}
-            bounds="parent"
+            bounds={bounds}
             onStop={(e, data) => {
                 onPositionChange({ x: data.x, y: data.y });
             }}

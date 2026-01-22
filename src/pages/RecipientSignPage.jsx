@@ -69,8 +69,9 @@ const RecipientSignPage = () => {
             if (fileError) throw fileError;
 
             const buffer = await fileData.arrayBuffer();
-            setPdfFile(buffer);
-            setPdfBuffer(buffer); // We need a clone for embedding later? pdf-lib usually needs a fresh one or we clone it then.
+            // Create separate copies to avoid detached buffer issues (e.g. if react-pdf or pdf-lib transfers ownership)
+            setPdfFile(buffer.slice(0));
+            setPdfBuffer(buffer.slice(0));
 
         } catch (err) {
             console.error("Error loading envelope:", err);
@@ -194,7 +195,7 @@ const RecipientSignPage = () => {
                     <div>
                         <h1 className="text-lg font-semibold flex items-center gap-2 text-white text-shadow-sm">
                             <PenTool className="w-5 h-5" />
-                            <span>QuickSign Guest</span>
+                            <span>E-Sign Guest</span>
                         </h1>
                         <p className="text-xs text-blue-100 opacity-80">Document Review</p>
                     </div>
@@ -328,7 +329,7 @@ const RecipientSignPage = () => {
                                                         setActiveField(field);
                                                         setIsSignatureModalOpen(true);
                                                     }}
-                                                    className="absolute bg-yellow-300/90 border-2 border-yellow-500 text-yellow-900 font-bold py-2 px-4 rounded shadow-sm hover:scale-105 transition-transform hover:bg-yellow-400 group"
+                                                    className="absolute bg-yellow-300/90 border-2 border-yellow-500 text-yellow-900 font-bold py-2 px-4 rounded shadow-sm hover:scale-105 transition-transform hover:bg-yellow-400 group pointer-events-auto"
                                                     style={{
                                                         left: left,
                                                         top: top,
