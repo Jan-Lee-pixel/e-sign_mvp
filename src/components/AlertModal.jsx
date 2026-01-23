@@ -1,7 +1,7 @@
 import React from 'react';
-import { HelpCircle, X } from 'lucide-react';
+import { AlertTriangle, Info, X } from 'lucide-react';
 
-const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title = "Confirm", message }) => {
+const AlertModal = ({ isOpen, onClose, title = "Alert", message, type = "error" }) => {
     if (!isOpen) return null;
 
     return (
@@ -11,7 +11,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title = "Confirm", mes
                 <div className="win7-window-title flex justify-between items-center">
                     <span>{title}</span>
                     <button
-                        onClick={onCancel}
+                        onClick={onClose}
                         className="p-1 hover:bg-red-500 hover:text-white rounded transition-colors focus:outline-none"
                     >
                         <X size={16} />
@@ -21,27 +21,24 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title = "Confirm", mes
                 {/* Content */}
                 <div className="p-6 flex items-start gap-4">
                     <div className="shrink-0">
-                        <HelpCircle size={32} className="text-[#1853db]" />
+                        {type === 'error' ? (
+                            <AlertTriangle size={32} className="text-yellow-500" />
+                        ) : (
+                            <Info size={32} className="text-blue-500" />
+                        )}
                     </div>
                     <div>
-                        <h3 className="text-[#1e395b] text-base mb-2 font-normal">Are you sure?</h3>
-                        <p className="text-sm text-gray-700">{message}</p>
+                        <p className="text-sm text-gray-700 mt-1.5">{message}</p>
                     </div>
                 </div>
 
                 {/* Footer / Buttons */}
-                <div className="px-4 py-3 bg-[#f0f0f0] border-t border-[#d9d9d9] flex justify-end gap-2">
+                <div className="px-4 py-3 bg-[#f0f0f0] border-t border-[#d9d9d9] flex justify-center">
                     <button
-                        onClick={onConfirm}
+                        onClick={onClose}
                         className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
                     >
-                        Yes
-                    </button>
-                    <button
-                        onClick={onCancel}
-                        className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
-                    >
-                        No
+                        OK
                     </button>
                 </div>
             </div>
@@ -49,4 +46,4 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title = "Confirm", mes
     );
 };
 
-export default ConfirmationModal;
+export default AlertModal;

@@ -7,6 +7,8 @@ import DraggablePlaceholder from '../components/DraggablePlaceholder';
 import { PenTool, Send, Link as LinkIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import SuccessModal from '../components/SuccessModal';
 import EmailModal from '../components/EmailModal';
+import ConfirmationModal from '../components/ConfirmationModal';
+import AlertModal from '../components/AlertModal';
 import emailjs from '@emailjs/browser';
 
 const ComposePage = () => {
@@ -30,7 +32,9 @@ const ComposePage = () => {
     const [isSending, setIsSending] = useState(false);
     const [generatedLink, setGeneratedLink] = useState(null);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // New state
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: () => { } });
+    const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -152,15 +156,27 @@ const ComposePage = () => {
     };
 
     const removeField = (id) => {
-        if (window.confirm("Remove this signature box?")) {
-            setFields(fields.filter(f => f.id !== id));
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Remove Field",
+            message: "Remove this signature box?",
+            onConfirm: () => {
+                setFields(prev => prev.filter(f => f.id !== id));
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const clearAllFields = () => {
-        if (window.confirm("Clear all signature fields?")) {
-            setFields([]);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Clear All",
+            message: "Clear all signature fields?",
+            onConfirm: () => {
+                setFields([]);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleSend = async () => {
@@ -251,6 +267,8 @@ const ComposePage = () => {
 
         } catch (err) {
             console.error(err);
+            console.error(err);
+            setAlertModal({ isOpen: true, title: "Error", message: err.message || "Failed to save envelope", type: "error" });
             setError(err.message || "Failed to save envelope");
         } finally {
             setIsSending(false);
@@ -260,7 +278,7 @@ const ComposePage = () => {
     const handleSendEmail = async (recipientEmail, customMessage) => {
         try {
             if (!generatedLink) {
-                alert("Error: No link generated yet.");
+                setAlertModal({ isOpen: true, title: "Error", message: "No link generated yet.", type: "error" });
                 return;
             }
 
@@ -282,7 +300,7 @@ const ComposePage = () => {
             setIsSuccessModalOpen(true); // Show success modal
         } catch (err) {
             console.error("Error sending email:", err);
-            alert("Failed to send email.");
+            setAlertModal({ isOpen: true, title: "Email Failed", message: "Failed to send email.", type: "error" });
         }
     };
 
@@ -325,7 +343,10 @@ const ComposePage = () => {
                             <div className="win7-window-container bg-white p-4">
                                 <h3 className="text-sm font-bold text-gray-700 mb-2">Step 1: Upload</h3>
                                 <div className="p-2 border border-dashed border-gray-400 bg-gray-50 rounded">
-                                    <PDFUploader onUpload={handleUpload} />
+                                    <PDFUploader
+                                        onUpload={handleUpload}
+                                        onError={(msg) => setAlertModal({ isOpen: true, title: "Upload Error", message: msg, type: "error" })}
+                                    />
                                 </div>
                             </div>
                         ) : (
@@ -461,6 +482,22 @@ const ComposePage = () => {
                 message={editingEnvelope
                     ? "Your changes have been saved. The existing link matches the new version."
                     : "The document link has been sent to the recipient successfully."}
+            />
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                title={confirmModal.title}
+                message={confirmModal.message}
+            />
+
+            <AlertModal
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type}
             />
         </div>
     );

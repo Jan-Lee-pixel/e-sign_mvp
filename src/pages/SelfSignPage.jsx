@@ -7,6 +7,8 @@ import DraggableSignature from '../components/DraggableSignature';
 import { embedSignature } from '../utils/pdfUtils';
 import { supabase } from '../lib/supabase';
 import { PenTool, Download, LogOut, User, Settings, Menu, Send, CheckCircle } from 'lucide-react';
+import ConfirmationModal from '../components/ConfirmationModal';
+import AlertModal from '../components/AlertModal';
 
 // ... imports ...
 
@@ -41,6 +43,8 @@ function SelfSignPage({ session }) {
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: () => { } });
+    const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
 
     const handleUpload = (buffer) => {
         // Clone for separate usage
@@ -72,9 +76,15 @@ function SelfSignPage({ session }) {
     };
 
     const clearSignatures = () => {
-        if (window.confirm("Clear all signatures?")) {
-            setSignatures([]);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Clear All",
+            message: "Clear all signatures?",
+            onConfirm: () => {
+                setSignatures([]);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleDownload = async () => {
@@ -106,7 +116,8 @@ function SelfSignPage({ session }) {
             document.body.removeChild(link);
         } catch (error) {
             console.error("Error signing PDF:", error);
-            alert("Failed to sign PDF.");
+            console.error("Error signing PDF:", error);
+            setAlertModal({ isOpen: true, title: "Error", message: "Failed to sign PDF.", type: "error" });
         } finally {
             setIsProcessing(false);
         }
@@ -161,7 +172,10 @@ function SelfSignPage({ session }) {
                                 <>
                                     <h3 className="text-sm font-bold text-gray-700 mb-2">Upload</h3>
                                     <p className="text-xs text-gray-500 mb-3">Select a PDF file from your computer to sign.</p>
-                                    <PDFUploader onUpload={handleUpload} />
+                                    <PDFUploader
+                                        onUpload={handleUpload}
+                                        onError={(msg) => setAlertModal({ isOpen: true, title: "Upload Error", message: msg, type: "error" })}
+                                    />
                                 </>
                             ) : (
                                 <>
@@ -250,8 +264,25 @@ function SelfSignPage({ session }) {
                 <SignaturePad
                     onSave={handleSignatureSave}
                     onCancel={() => setIsSignatureModalOpen(false)}
+                    onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                title={confirmModal.title}
+                message={confirmModal.message}
+            />
+
+            <AlertModal
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type}
+            />
         </div>
     );
 }

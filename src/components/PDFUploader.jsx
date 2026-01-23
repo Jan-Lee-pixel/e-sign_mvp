@@ -1,7 +1,7 @@
 import React from 'react';
 import { Upload } from 'lucide-react';
 
-const PDFUploader = ({ onUpload }) => {
+const PDFUploader = ({ onUpload, onError }) => {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.type === 'application/pdf') {
@@ -11,7 +11,11 @@ const PDFUploader = ({ onUpload }) => {
             };
             reader.readAsArrayBuffer(file);
         } else {
-            alert("Please upload a valid PDF file.");
+            if (onError) {
+                onError("Please upload a valid PDF file.");
+            } else {
+                alert("Please upload a valid PDF file.");
+            }
         }
     };
 

@@ -2,14 +2,18 @@ import React, { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { X } from 'lucide-react';
 
-const SignaturePad = ({ onSave, onCancel }) => {
+const SignaturePad = ({ onSave, onCancel, onWarning }) => {
     const sigCanvas = useRef({});
 
     const clear = () => sigCanvas.current.clear();
 
     const save = () => {
         if (sigCanvas.current.isEmpty()) {
-            alert("Please provide a signature first.");
+            if (onWarning) {
+                onWarning("Please provide a signature first.");
+            } else {
+                alert("Please provide a signature first.");
+            }
             return;
         }
         const dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');

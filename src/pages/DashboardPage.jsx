@@ -2,11 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, CheckCircle, PenTool, LayoutDashboard, LogOut, Download, Plus, MoreVertical, Edit, Pencil } from 'lucide-react';
+import PromptModal from '../components/PromptModal';
+import AlertModal from '../components/AlertModal';
 
 const DashboardPage = ({ session }) => {
     const navigate = useNavigate();
     const [envelopes, setEnvelopes] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Modals
+    const [promptModal, setPromptModal] = useState({ isOpen: false, title: "", message: "", defaultValue: "", onConfirm: () => { } });
+    const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
 
     useEffect(() => {
         if (!session) return;
@@ -47,7 +53,7 @@ const DashboardPage = ({ session }) => {
 
         const targetPath = path || originalPath;
         if (!targetPath) {
-            alert("No document path available.");
+            setAlertModal({ isOpen: true, title: "Download Error", message: "No document path available.", type: "error" });
             return;
         }
 
@@ -79,8 +85,30 @@ const DashboardPage = ({ session }) => {
             URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Error downloading PDF:", error);
-            alert(`Failed to download PDF. ${error.message || ''}`);
+            setAlertModal({ isOpen: true, title: "Download Failed", message: error.message || "Failed to download PDF.", type: "error" });
         }
+    };
+
+    const handleRenameClick = (env) => {
+        setPromptModal({
+            isOpen: true,
+            title: "Rename Document",
+            message: "Enter new name:",
+            defaultValue: env.name || "",
+            onConfirm: (newName) => {
+                if (newName && newName !== env.name) {
+                    supabase.from('envelopes')
+                        .update({ name: newName })
+                        .eq('id', env.id)
+                        .then(() => {
+                            fetchEnvelopes();
+                            setPromptModal(prev => ({ ...prev, isOpen: false }));
+                        });
+                } else {
+                    setPromptModal(prev => ({ ...prev, isOpen: false }));
+                }
+            }
+        });
     };
 
     return (
@@ -215,11 +243,7 @@ const DashboardPage = ({ session }) => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            const newName = prompt("Rename document:", env.name || "");
-                                                            if (newName && newName !== env.name) {
-                                                                // Simple inline rename for MVP
-                                                                supabase.from('envelopes').update({ name: newName }).eq('id', env.id).then(() => fetchEnvelopes());
-                                                            }
+                                                            handleRenameClick(env);
                                                         }}
                                                         className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded"
                                                         title="Rename"
@@ -238,7 +262,24 @@ const DashboardPage = ({ session }) => {
                     </div>
                 </div>
             </div>
-        </div>
+
+            <PromptModal
+                isOpen={promptModal.isOpen}
+                onClose={() => setPromptModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={promptModal.onConfirm}
+                title={promptModal.title}
+                message={promptModal.message}
+                defaultValue={promptModal.defaultValue}
+            />
+
+            <AlertModal
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type}
+            />
+        </div >
     );
 };
 

@@ -5,6 +5,7 @@ import PDFViewer from '../components/PDFViewer';
 import SignaturePad from '../components/SignaturePad';
 import { embedSignature } from '../utils/pdfUtils';
 import { PenTool, Download, CheckCircle, AlertTriangle } from 'lucide-react';
+import AlertModal from '../components/AlertModal';
 
 const RecipientSignPage = () => {
     const { token } = useParams();
@@ -22,6 +23,7 @@ const RecipientSignPage = () => {
     const [signedFields, setSignedFields] = useState({}); // { fieldId: signatureDataURL }
     const [isSaving, setIsSaving] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
+    const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
 
     useEffect(() => {
         fetchEnvelope();
@@ -220,7 +222,7 @@ const RecipientSignPage = () => {
             setIsComplete(true);
         } catch (err) {
             console.error("Error finishing envelope:", err);
-            alert("Failed to finish. " + err.message);
+            setAlertModal({ isOpen: true, title: "Error", message: "Failed to finish. " + err.message, type: "error" });
         } finally {
             setIsSaving(false);
         }
@@ -405,6 +407,7 @@ const RecipientSignPage = () => {
                 <SignaturePad
                     onSave={handleSignatureSave}
                     onCancel={() => setIsSignatureModalOpen(false)}
+                    onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
                 />
             )}
 
@@ -419,6 +422,14 @@ const RecipientSignPage = () => {
                     </div>
                 </div>
             )}
+
+            <AlertModal
+                isOpen={alertModal.isOpen}
+                onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+                title={alertModal.title}
+                message={alertModal.message}
+                type={alertModal.type}
+            />
         </div>
     );
 };
