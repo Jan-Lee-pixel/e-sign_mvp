@@ -84,19 +84,32 @@ const RecipientSignPage = () => {
     };
 
     const handlePageLoad = (page) => {
+        // Debug page object
+        console.log("Page Loaded:", page);
+
         // Calculate rendered height for % positioning
-        const rotation = page.rotate || 0;
-        let validWidth = page.originalWidth;
-        let validHeight = page.originalHeight;
+        const rotation = page.rotate || page.rotation || 0;
+        // react-pdf v9+ might use width/height or originalWidth/originalHeight
+        let validWidth = page.originalWidth || page.width;
+        let validHeight = page.originalHeight || page.height;
+
+        if (!validWidth || !validHeight) {
+            console.error("Could not determine page dimensions", page);
+            // Fallback (A4 ratio)
+            validWidth = 595;
+            validHeight = 842;
+        }
 
         if (rotation === 90 || rotation === 270) {
-            validWidth = page.originalHeight;
-            validHeight = page.originalWidth;
+            const temp = validWidth;
+            validWidth = validHeight;
+            validHeight = temp;
         }
 
         const aspectRatio = validWidth / validHeight;
         const renderedHeight = 600 / aspectRatio;
 
+        console.log(`Dimensions - Original: ${validWidth}x${validHeight}, Rendered Height: ${renderedHeight}`);
         setPageDimensions({ width: 600, height: renderedHeight });
     };
 
@@ -152,6 +165,8 @@ const RecipientSignPage = () => {
                 const y = (field.y_pct / 100) * pageDimensions.height;
 
                 // Embed
+                console.log(`Embedding signature for field ${field.id} at Page ${field.page_number}, UI Coords: ${x}, ${y}`);
+
                 currentPdfBuffer = await embedSignature({
                     pdfBuffer: currentPdfBuffer,
                     signatureImage: signatureData,
@@ -160,6 +175,7 @@ const RecipientSignPage = () => {
                     visualWidth: 600
                 });
             }
+            console.log("All signatures embedded. Preparing download...");
 
             // Download
             const blob = new Blob([currentPdfBuffer], { type: 'application/pdf' });
@@ -196,27 +212,19 @@ const RecipientSignPage = () => {
             // OR -- assuming the RPC `complete_envelope` might not update the URL.
             // Let's try to update the row separately.
 
-            // We need the envelope ID. We have `envelopeData.id`? 
-            // The `fetchEnvelope` sets `envelopeData`. 
-            // Let's check if we have `envelopeData.id`. Yes, usually we do.
-            if (envelopeData && envelopeData.id) {
-                const { error: updateError } = await supabase
-                    .from('envelopes')
-                    .update({
-                        status: 'signed',
-                        pdf_url: signedPdfPath // Storing signed path in pdf_url or a new column? Plan said signed_pdf_url but maybe reuse pdf_url? 
-                        // If pdf_url was original, we might overwrite it? 
-                        // `original_pdf_url` stores the original. `pdf_url` is often used for the "current" or "signed" one.
-                        // Let's blindly try `pdf_url` (or `signed_pdf_url` if we are sure).
-                        // Let's use `pdf_url` as the "final" url.
-                    })
-                    .eq('id', envelopeData.id);
+            // USE SECURE RPC to save the document path (Bypass RLS for guests)
+            // This function also marks it as 'signed'/'completed'
+            const { error: rpcError } = await supabase.rpc('save_signed_document', {
+                token_input: token,
+                path: signedPdfPath
+            });
 
-                if (updateError) console.error("Failed to update envelope with signed path:", updateError);
+            if (rpcError) {
+                console.error("Failed to save signed document via RPC:", rpcError);
+                console.error("RPC Params:", { token_input: token, path: signedPdfPath });
+                alert(`Error saving status: ${rpcError.message}\nDetails: ${rpcError.details || 'None'}`);
+                throw new Error("Could not save signed document status.");
             }
-
-            // Still call RPC to ensure any other logic (like invalidating token) happens
-            const { error: rpcError } = await supabase.rpc('complete_envelope', { token_input: token });
             if (rpcError) throw rpcError;
 
             setIsComplete(true);

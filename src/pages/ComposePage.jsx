@@ -282,8 +282,12 @@ const ComposePage = () => {
                 return;
             }
 
+            const { data: { user } } = await supabase.auth.getUser();
+            const senderEmail = user?.email || 'someone';
+
             const templateParams = {
                 to_email: recipientEmail,
+                from_email: senderEmail,
                 link: generatedLink,
                 message: customMessage
             };

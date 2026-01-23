@@ -56,6 +56,9 @@ export async function embedSignature({
     const pdfSignatureHeight = uiSignatureHeight * scale;
     const pdfSignatureWidth = pdfSignatureHeight * aspectRatio;
 
+    // Debugging logs
+    console.log(`EmbedSignature: Position UI (${position.x}, ${position.y}), PageSize (${width}, ${height}), Scale ${scale}`);
+
     let pdfX, pdfDrawY, imageRotation;
 
     // Handle Rotation
