@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { PenTool } from 'lucide-react';
 
 const AuthPage = () => {
     const [isSignUp, setIsSignUp] = useState(false);
@@ -42,14 +43,17 @@ const AuthPage = () => {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#ededed] win7-wallpaper-pattern relative overflow-hidden font-segoe">
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#ededed] relative overflow-hidden font-segoe">
 
-            {/* Branding Header (Optional, or just floating) */}
-            <div className="absolute top-0 left-0 right-0 h-16 bg-[#1853db]/80 backdrop-blur-sm shadow-md flex items-center px-6 z-10 border-b border-white/20">
-                <div className="flex items-center gap-3 text-white">
-                    <h1 className="text-xl font-semibold text-shadow-sm">E-Sign</h1>
+            {/* Header */}
+            <header className="absolute top-0 left-0 right-0 h-16 bg-[#1853db] text-white flex items-center px-6 shadow-md z-50 win7-aero-glass">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-xl font-semibold flex items-center gap-2 text-white text-shadow-sm">
+                        <PenTool className="w-6 h-6" />
+                        <span>E-Sign</span>
+                    </h1>
                 </div>
-            </div>
+            </header>
 
             <div className="w-full max-w-md win7-window-container shadow-2xl relative z-20">
                 <div className="win7-window-title flex justify-between items-center">
@@ -142,3 +146,4 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+
