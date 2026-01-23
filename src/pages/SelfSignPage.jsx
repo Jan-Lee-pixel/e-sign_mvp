@@ -192,7 +192,7 @@ function SelfSignPage({ session }) {
                                             className="flex-1 py-2 bg-blue-100 border border-blue-300 text-blue-900 rounded hover:bg-blue-200 transition-colors flex items-center justify-center gap-2 font-semibold text-sm"
                                         >
                                             <PenTool size={14} />
-                                            Add Sig
+                                            Add Signature
                                         </button>
                                         <button
                                             onClick={clearSignatures}

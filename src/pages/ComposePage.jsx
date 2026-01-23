@@ -4,10 +4,12 @@ import PDFUploader from '../components/PDFUploader';
 import PDFViewer from '../components/PDFViewer';
 import DraggablePlaceholder from '../components/DraggablePlaceholder';
 import { PenTool, Send, Link as LinkIcon, AlertCircle, CheckCircle } from 'lucide-react';
+import SuccessModal from '../components/SuccessModal';
 import EmailModal from '../components/EmailModal';
 import emailjs from '@emailjs/browser';
 
 const ComposePage = () => {
+    // ... existing state
     const [pdfFile, setPdfFile] = useState(null);
     const [pdfBuffer, setPdfBuffer] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
@@ -19,7 +21,10 @@ const ComposePage = () => {
     const [isSending, setIsSending] = useState(false);
     const [generatedLink, setGeneratedLink] = useState(null);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // New state
     const [error, setError] = useState(null);
+
+    // ... handleUpload, handlePageLoad, field functions ...
 
     const handleUpload = (buffer) => {
         // Clone for separate usage
@@ -156,8 +161,9 @@ const ComposePage = () => {
                 'YAzn6fbluRSwQnvsG'
             );
 
-            alert("Email sent successfully!");
+            // alert("Email sent successfully!");
             setIsEmailModalOpen(false);
+            setIsSuccessModalOpen(true); // Show success modal
         } catch (err) {
             console.error("Error sending email:", err);
             alert("Failed to send email.");
@@ -314,6 +320,13 @@ const ComposePage = () => {
                 onClose={() => setIsEmailModalOpen(false)}
                 onSend={handleSendEmail}
                 defaultMessage="Please review and sign this document."
+            />
+
+            <SuccessModal
+                isOpen={isSuccessModalOpen}
+                onClose={() => setIsSuccessModalOpen(false)}
+                title="Email Sent"
+                message="The document link has been sent to the recipient successfully."
             />
         </div>
     );
