@@ -5,6 +5,7 @@ import AuthPage from './components/AuthPage';
 import SelfSignPage from './pages/SelfSignPage';
 import ComposePage from './pages/ComposePage';
 import RecipientSignPage from './pages/RecipientSignPage';
+import DashboardPage from './pages/DashboardPage';
 import './App.css';
 
 function App() {
@@ -37,11 +38,22 @@ function App() {
                 <Route path="/sign/:token" element={<RecipientSignPage />} />
 
                 {/* Protected Routes */}
+                <Route path="/login" element={
+                    !session ? <AuthPage /> : <Navigate to="/dashboard" />
+                } />
+
                 <Route path="/" element={
-                    !session ? <AuthPage /> : <SelfSignPage session={session} />
+                    !session ? <Navigate to="/login" /> : <Navigate to="/dashboard" />
+                } />
+
+                <Route path="/dashboard" element={
+                    !session ? <Navigate to="/login" /> : <DashboardPage session={session} />
+                } />
+                <Route path="/self-sign" element={
+                    !session ? <Navigate to="/login" /> : <SelfSignPage session={session} />
                 } />
                 <Route path="/compose" element={
-                    !session ? <AuthPage /> : <ComposePage />
+                    !session ? <Navigate to="/login" /> : <ComposePage />
                 } />
 
                 {/* Fallback */}

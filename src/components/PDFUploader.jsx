@@ -7,7 +7,7 @@ const PDFUploader = ({ onUpload }) => {
         if (file && file.type === 'application/pdf') {
             const reader = new FileReader();
             reader.onload = (event) => {
-                onUpload(event.target.result);
+                onUpload(event.target.result, file.name);
             };
             reader.readAsArrayBuffer(file);
         } else {

@@ -119,52 +119,32 @@ function SelfSignPage({ session }) {
     return (
         <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#ededed] font-segoe">
             {/* Header */}
-            <header className="h-16 bg-[#1853db] text-white flex items-center justify-between px-4 shadow-md z-50 shrink-0 win7-aero-glass">
+            <header className="h-16 bg-[#1853db] text-white flex items-center justify-between px-6 shadow-md z-50 shrink-0 win7-aero-glass">
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Back to Dashboard"
+                    >
+                        <div className="w-6 h-6 flex items-center justify-center font-bold text-xl">←</div>
+                    </button>
                     <div>
-                        <h1 className="text-lg font-semibold flex items-center gap-2 text-white text-shadow-sm">
-                            <PenTool className="w-5 h-5" />
+                        <h1 className="text-xl font-semibold flex items-center gap-2 text-white text-shadow-sm">
+                            <PenTool className="w-6 h-6" />
                             <span>E-Sign Self-Sign</span>
                         </h1>
-                        <p className="text-xs text-blue-100 opacity-80">Personal Workspace</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
+                    <span className="text-sm opacity-80">Welcome, {session?.user?.email}</span>
                     <button
-                        onClick={() => navigate('/compose')}
-                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 text-sm flex items-center gap-2"
+                        onClick={handleSignOut}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded border border-white/20 text-sm flex items-center gap-2 transition-colors"
                     >
-                        <Send size={14} />
-                        Go to Composer
+                        <LogOut size={14} />
+                        Sign Out
                     </button>
-
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="p-2 hover:bg-white/10 rounded-lg"
-                        >
-                            <Menu size={20} />
-                        </button>
-                        {isMenuOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-300 shadow-xl rounded-lg py-1 z-50 text-gray-800">
-                                <div className="px-4 py-2 border-b border-gray-100 bg-gray-50">
-                                    <p className="text-xs text-gray-500 uppercase">Account</p>
-                                    <p className="text-sm font-semibold truncate">{session?.user?.email}</p>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        handleSignOut();
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                                >
-                                    <LogOut size={14} />
-                                    Sign Out
-                                </button>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </header>
 

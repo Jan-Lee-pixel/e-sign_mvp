@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import PDFUploader from '../components/PDFUploader';
 import PDFViewer from '../components/PDFViewer';
@@ -9,6 +10,14 @@ import EmailModal from '../components/EmailModal';
 import emailjs from '@emailjs/browser';
 
 const ComposePage = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Edit Mode State
+    const [editingEnvelope, setEditingEnvelope] = useState(null);
+    const [pendingFields, setPendingFields] = useState(null); // Fields waiting for PDF dimensions
+    const [envelopeName, setEnvelopeName] = useState("Untitled Envelope");
+
     // ... existing state
     const [pdfFile, setPdfFile] = useState(null);
     const [pdfBuffer, setPdfBuffer] = useState(null);
@@ -24,9 +33,62 @@ const ComposePage = () => {
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // New state
     const [error, setError] = useState(null);
 
-    // ... handleUpload, handlePageLoad, field functions ...
+    useEffect(() => {
+        if (location.state?.envelope) {
+            initializeEditMode(location.state.envelope);
+        }
+    }, [location.state]);
 
-    const handleUpload = (buffer) => {
+    // Hydrate fields when dimensions AND pending fields are ready
+    useEffect(() => {
+        if (pageDimensions && pendingFields && pendingFields.length > 0) {
+            console.log("Hydrating fields:", pendingFields);
+            const hydratedFields = pendingFields.map(pf => ({
+                id: pf.id || crypto.randomUUID(),
+                page: pf.page_number,
+                x: (pf.x_pct / 100) * pageDimensions.width,
+                y: (pf.y_pct / 100) * pageDimensions.height
+            }));
+
+            setFields(hydratedFields);
+            setPendingFields(null); // Clear to prevent re-hydration
+        }
+    }, [pageDimensions, pendingFields]);
+
+    const initializeEditMode = async (envelope) => {
+        setEditingEnvelope(envelope);
+        setEnvelopeName(envelope.name || "Untitled Envelope");
+        setGeneratedLink(`${window.location.origin}/sign/${envelope.access_token}`); // Pre-fill link
+
+        try {
+            // 1. Fetch original PDF
+            const { data: fileData, error: fileError } = await supabase.storage
+                .from('envelopes')
+                .download(envelope.original_pdf_url);
+
+            if (fileError) throw fileError;
+            const buffer = await fileData.arrayBuffer();
+            setPdfFile(buffer.slice(0));
+            setPdfBuffer(buffer.slice(0));
+
+            // 2. Fetch Fields
+            const { data: fieldsData, error: fieldsError } = await supabase
+                .from('fields')
+                .select('*')
+                .eq('envelope_id', envelope.id);
+
+            if (fieldsError) throw fieldsError;
+
+            // Store fields to be hydrated when page dimensions are known
+            setPendingFields(fieldsData);
+
+        } catch (err) {
+            console.error("Error initializing edit mode:", err);
+            setError("Failed to load envelope for editing.");
+        }
+    };
+
+    const handleUpload = (buffer, filename) => {
         // Clone for separate usage
         setPdfFile(buffer.slice(0));
         setPdfBuffer(buffer.slice(0));
@@ -34,6 +96,9 @@ const ComposePage = () => {
         setFields([]);
         setGeneratedLink(null);
         setError(null);
+        setEditingEnvelope(null); // Reset edit mode on new upload
+        const nameWithoutExt = filename ? filename.replace(/\.pdf$/i, "") : "Untitled Envelope";
+        setEnvelopeName(nameWithoutExt);
     };
 
     const handlePageLoad = (page) => {
@@ -51,7 +116,25 @@ const ComposePage = () => {
         const aspectRatio = validWidth / validHeight;
         const renderedHeight = 600 / aspectRatio;
 
-        setPageDimensions({ width: 600, height: renderedHeight });
+        const newDims = { width: 600, height: renderedHeight };
+        setPageDimensions(newDims);
+
+        // Hydrate fields if pending
+        if (pendingFields && pendingFields.length > 0) {
+            const hydratedFields = pendingFields.map(pf => ({
+                id: pf.id || crypto.randomUUID(), // Ensure ID
+                page: pf.page_number,
+                x: (pf.x_pct / 100) * 600,
+                y: (pf.y_pct / 100) * renderedHeight
+            }));
+
+            // Only add fields that haven't been added yet (simple check) or just replace?
+            // Since we load PDF once, just setting fields is fine.
+            // But we need to handle pagination if multi-page. 
+            // Currently pendingFields has ALL fields. We should set them all.
+            setFields(hydratedFields);
+            setPendingFields(null); // clear
+        }
     };
 
     const addField = () => {
@@ -86,56 +169,89 @@ const ComposePage = () => {
         setError(null);
 
         try {
-            // 1. Upload PDF
-            const fileName = `${crypto.randomUUID()}.pdf`;
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('envelopes')
-                .upload(fileName, pdfBuffer, {
-                    contentType: 'application/pdf',
-                    upsert: false
-                });
+            if (editingEnvelope) {
+                // UPDATE EXISTING ENVELOPE
+                const envelopeId = editingEnvelope.id;
 
-            if (uploadError) throw uploadError;
-            const pdfPath = uploadData.path;
+                // 1. Delete old fields
+                const { error: deleteError } = await supabase
+                    .from('fields')
+                    .delete()
+                    .eq('envelope_id', envelopeId);
 
-            // 2. Insert Envelope
-            const accessToken = crypto.randomUUID();
-            const { data: envelopeData, error: envelopeError } = await supabase
-                .from('envelopes')
-                .insert([
-                    {
-                        original_pdf_url: pdfPath,
-                        access_token: accessToken,
-                        status: 'sent',
-                        sender_id: (await supabase.auth.getUser()).data.user?.id
-                    }
-                ])
-                .select()
-                .single();
+                if (deleteError) throw deleteError;
 
-            if (envelopeError) throw envelopeError;
+                // 2. Insert new fields
+                if (!pageDimensions) throw new Error("Page dimensions not loaded");
 
-            // 3. Insert Fields
-            if (!pageDimensions) throw new Error("Page dimensions not loaded");
+                const fieldsToInsert = fields.map(f => ({
+                    envelope_id: envelopeId,
+                    page_number: f.page,
+                    x_pct: (f.x / pageDimensions.width) * 100,
+                    y_pct: (f.y / pageDimensions.height) * 100
+                    // created_at will be now
+                }));
 
-            const fieldsToInsert = fields.map(f => ({
-                envelope_id: envelopeData.id,
-                page_number: f.page,
-                x_pct: (f.x / pageDimensions.width) * 100,
-                y_pct: (f.y / pageDimensions.height) * 100
-            }));
+                const { error: insertError } = await supabase
+                    .from('fields')
+                    .insert(fieldsToInsert);
 
-            const { error: fieldsError } = await supabase
-                .from('fields')
-                .insert(fieldsToInsert);
+                if (insertError) throw insertError;
 
-            if (fieldsError) throw fieldsError;
+                setIsSuccessModalOpen(true); // Re-use success modal? Or just toast?
+                // Maybe change SuccessModal title to "Changes Saved"
 
-            setGeneratedLink(`${window.location.origin}/sign/${accessToken}`);
+            } else {
+                // CREATE NEW ENVELOPE (Existing logic)
+                const fileName = `${crypto.randomUUID()}.pdf`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('envelopes')
+                    .upload(fileName, pdfBuffer, {
+                        contentType: 'application/pdf',
+                        upsert: false
+                    });
+
+                if (uploadError) throw uploadError;
+                const pdfPath = uploadData.path;
+
+                const accessToken = crypto.randomUUID();
+                const { data: envelopeData, error: envelopeError } = await supabase
+                    .from('envelopes')
+                    .insert([
+                        {
+                            original_pdf_url: pdfPath,
+                            access_token: accessToken,
+                            status: 'pending', // Default to pending
+                            sender_id: (await supabase.auth.getUser()).data.user?.id,
+                            name: envelopeName
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (envelopeError) throw envelopeError;
+
+                if (!pageDimensions) throw new Error("Page dimensions not loaded");
+
+                const fieldsToInsert = fields.map(f => ({
+                    envelope_id: envelopeData.id,
+                    page_number: f.page,
+                    x_pct: (f.x / pageDimensions.width) * 100,
+                    y_pct: (f.y / pageDimensions.height) * 100
+                }));
+
+                const { error: fieldsError } = await supabase
+                    .from('fields')
+                    .insert(fieldsToInsert);
+
+                if (fieldsError) throw fieldsError;
+
+                setGeneratedLink(`${window.location.origin}/sign/${accessToken}`);
+            }
 
         } catch (err) {
             console.error(err);
-            setError(err.message || "Failed to send envelope");
+            setError(err.message || "Failed to save envelope");
         } finally {
             setIsSending(false);
         }
@@ -174,13 +290,25 @@ const ComposePage = () => {
         <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#ededed] font-segoe">
             {/* Header */}
             <header className="h-16 bg-[#1853db] text-white flex items-center justify-between px-4 shadow-md z-50 shrink-0 win7-aero-glass">
-                <div className="flex items-center gap-4">
-                    <div>
-                        <h1 className="text-lg font-semibold flex items-center gap-2 text-white text-shadow-sm">
-                            <PenTool className="w-5 h-5" />
-                            <span>E-Sign Compose</span>
-                        </h1>
-                        <p className="text-xs text-blue-100 opacity-80">Prepare Envelope</p>
+                <div className="flex items-center gap-4 flex-1">
+                    <button
+                        onClick={() => window.history.back()}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Back to Dashboard"
+                    >
+                        <div className="w-6 h-6 flex items-center justify-center font-bold text-xl">←</div>
+                    </button>
+                    <div className="flex-1 max-w-lg">
+                        <div className="flex items-center gap-2">
+                            <PenTool className="w-5 h-5 opacity-80" />
+                            <input
+                                value={envelopeName}
+                                onChange={(e) => setEnvelopeName(e.target.value)}
+                                className="bg-transparent border-b border-transparent hover:border-blue-300 focus:border-white focus:outline-none text-lg font-semibold text-white placeholder-blue-200 w-full"
+                                placeholder="Name your document..."
+                            />
+                        </div>
+                        <p className="text-xs text-blue-100 opacity-80 pl-7">Prepare Envelope</p>
                     </div>
                 </div>
             </header>
@@ -229,25 +357,29 @@ const ComposePage = () => {
                                 <div className="win7-window-container bg-white p-4">
                                     <h3 className="text-sm font-bold text-gray-700 mb-2">Actions</h3>
                                     <div className="flex flex-col gap-3">
-                                        {!generatedLink ? (
+                                        {(!generatedLink || editingEnvelope) ? (
                                             <button
                                                 onClick={handleSend}
                                                 disabled={fields.length === 0 || isSending}
                                                 className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded font-semibold shadow transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-green-600"
                                             >
-                                                {isSending ? 'Sending...' : (
+                                                {isSending ? (editingEnvelope ? 'Saving...' : 'Sending...') : (
                                                     <>
-                                                        <LinkIcon size={16} />
-                                                        Generate Link
+                                                        {editingEnvelope ? <CheckCircle size={16} /> : <LinkIcon size={16} />}
+                                                        {editingEnvelope ? 'Save Changes' : 'Generate Link'}
                                                     </>
                                                 )}
                                             </button>
-                                        ) : (
+                                        ) : null}
+
+                                        {generatedLink && (
                                             <>
-                                                <div className="bg-green-500/20 px-3 py-2 rounded text-sm border border-green-400/30 text-green-800 flex items-center gap-2">
-                                                    <CheckCircle size={14} />
-                                                    Link Ready!
-                                                </div>
+                                                {!editingEnvelope && (
+                                                    <div className="bg-green-500/20 px-3 py-2 rounded text-sm border border-green-400/30 text-green-800 flex items-center gap-2">
+                                                        <CheckCircle size={14} />
+                                                        Link Ready!
+                                                    </div>
+                                                )}
                                                 <div className="flex gap-1">
                                                     <input
                                                         readOnly
@@ -325,8 +457,10 @@ const ComposePage = () => {
             <SuccessModal
                 isOpen={isSuccessModalOpen}
                 onClose={() => setIsSuccessModalOpen(false)}
-                title="Email Sent"
-                message="The document link has been sent to the recipient successfully."
+                title={editingEnvelope ? "Changes Saved" : "Email Sent"}
+                message={editingEnvelope
+                    ? "Your changes have been saved. The existing link matches the new version."
+                    : "The document link has been sent to the recipient successfully."}
             />
         </div>
     );
