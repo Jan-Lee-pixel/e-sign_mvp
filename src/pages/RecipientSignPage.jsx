@@ -26,6 +26,15 @@ const RecipientSignPage = () => {
     const [isComplete, setIsComplete] = useState(false);
     const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
 
+    // Check for active session even in guest view
+    const [userId, setUserId] = useState(null);
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) setUserId(session.user.id);
+        });
+    }, []);
+
     useEffect(() => {
         fetchEnvelope();
     }, [token]);
@@ -317,6 +326,7 @@ const RecipientSignPage = () => {
                     onSave={handleSignatureSave}
                     onCancel={() => setIsSignatureModalOpen(false)}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
+                    userId={userId}
                 />
             )}
 

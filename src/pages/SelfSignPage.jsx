@@ -283,6 +283,7 @@ function SelfSignPage({ session }) {
                     onSave={handleSignatureSave}
                     onCancel={() => setIsSignatureModalOpen(false)}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
+                    userId={session?.user?.id}
                 />
             )}
 
