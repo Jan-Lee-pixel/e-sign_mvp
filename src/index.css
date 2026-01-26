@@ -1,187 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
-    /* Windows 7 Aero Color Palette */
-    --aero-blue: #4591d6;
-    --aero-blue-dark: #2d5f8e;
-    --aero-blue-light: #7ab8e8;
-    --aero-glass: rgba(255, 255, 255, 0.08);
-    --aero-glass-border: rgba(255, 255, 255, 0.3);
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --win7-bg: #ededed;
-    --win7-taskbar: #1f1f1f;
-    --win7-window: #f0f0f0;
-    --win7-border: #8c8c8c;
-    --win7-shadow: rgba(0, 0, 0, 0.3);
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --text-primary: #1a1a1a;
-    --text-secondary: #5a5a5a;
-    --text-tertiary: #8a8a8a;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    /* Minimal Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
 }
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    margin: 0;
-    padding: 0;
-    background: var(--win7-bg);
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-/* Aero Glass Effect */
-.aero-glass {
-    background: linear-gradient(180deg,
-            rgba(255, 255, 255, 0.4) 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0.05) 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--aero-glass-border);
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.aero-window {
-    background: var(--win7-window);
-    border: 1px solid var(--win7-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-}
-
-/* Windows 7 Button Styles */
-.win7-button {
-    background: linear-gradient(180deg, #fefefe 0%, #e5e5e5 100%);
-    border: 1px solid #adadad;
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.8) inset,
-        0 1px 2px rgba(0, 0, 0, 0.15);
-    transition: all 0.15s ease;
-}
-
-.win7-button:hover {
-    background: linear-gradient(180deg, #ffffff 0%, #ebebeb 100%);
-    border-color: #7eb4ea;
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.9) inset,
-        0 0 4px rgba(126, 180, 234, 0.5);
-}
-
-.win7-button:active {
-    background: linear-gradient(180deg, #d5d5d5 0%, #e8e8e8 100%);
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.2) inset;
-}
-
-.win7-button-primary {
-    background: linear-gradient(180deg, #7ab8e8 0%, #4591d6 100%);
-    border: 1px solid #2d5f8e;
-    color: white;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.3);
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.3) inset,
-        0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.win7-button-primary:hover {
-    background: linear-gradient(180deg, #8cc5f0 0%, #5ba0dd 100%);
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.4) inset,
-        0 0 4px rgba(74, 144, 214, 0.5);
-}
-
-.win7-button-primary:active {
-    background: linear-gradient(180deg, #3d84c6 0%, #5a9dd8 100%);
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.3) inset;
-}
-
-/* Taskbar-like Header */
-.win7-taskbar {
-    background: linear-gradient(180deg, #444 0%, #1f1f1f 100%);
-    border-bottom: 1px solid #0a0a0a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* Input Fields */
-.win7-input {
-    background: white;
-    border: 1px solid #7a7a7a;
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.1) inset,
-        0 0 0 1px rgba(255, 255, 255, 0.5);
-    transition: border-color 0.15s ease;
-}
-
-.win7-input:focus {
-    border-color: var(--aero-blue);
-    outline: none;
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.1) inset,
-        0 0 0 1px rgba(74, 144, 214, 0.3),
-        0 0 4px rgba(74, 144, 214, 0.4);
-}
-
-/* Minimal Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-.fade-in {
-    animation: fadeIn 0.2s ease-out;
-}
-
-/* Modal Overlay with Aero */
-.win7-modal-overlay {
-    backdrop-filter: blur(3px);
-    background: rgba(0, 0, 0, 0.4);
-    animation: fadeIn 0.2s ease-out;
-}
-
-/* Disable fancy animations */
-button,
-a,
-input,
-textarea {
-    transition: all 0.15s ease;
-}
-
-
-/* Additional Win7 Redesign Classes */
-.win7-aero-glass {
-    background: linear-gradient(180deg, rgba(20, 60, 140, 0.85) 0%, rgba(10, 40, 100, 0.9) 100%);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.win7-wallpaper-pattern {
-    background-color: #5578a2;
-    background-image:
-        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 20%);
-}
-
-*:focus-visible {
-    outline: 1px dotted #000;
-    outline-offset: 2px;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
 }

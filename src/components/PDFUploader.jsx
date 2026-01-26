@@ -1,5 +1,6 @@
 import React from 'react';
-import { Upload } from 'lucide-react';
+import { UploadCloud } from 'lucide-react';
+import { Button } from './ui/Button';
 
 const PDFUploader = ({ onUpload, onError }) => {
     const handleFileChange = (e) => {
@@ -20,11 +21,18 @@ const PDFUploader = ({ onUpload, onError }) => {
     };
 
     return (
-        <div className="win7-upload text-center py-12 px-6">
-            <label htmlFor="pdf-upload" className="cursor-pointer flex flex-col items-center">
-                <Upload className="w-16 h-16 text-gray-400 mb-4" />
-                <span className="text-lg font-semibold text-gray-700 mb-1">Upload PDF Document</span>
-                <span className="text-sm text-gray-500">Click to browse for a file</span>
+        <div className="w-full">
+            <label htmlFor="pdf-upload" className="cursor-pointer w-full">
+                <Button
+                    variant="outline"
+                    className="w-full h-12 border-dashed border-2 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                    asChild
+                >
+                    <div className="flex items-center justify-center gap-2">
+                        <UploadCloud size={20} />
+                        Choose PDF
+                    </div>
+                </Button>
                 <input
                     id="pdf-upload"
                     type="file"

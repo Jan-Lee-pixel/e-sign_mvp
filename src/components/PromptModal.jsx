@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, X } from 'lucide-react';
+import { Pencil } from 'lucide-react';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
 
 const PromptModal = ({ isOpen, onClose, onConfirm, title = "Input", message, defaultValue = "", placeholder = "" }) => {
     const [value, setValue] = useState(defaultValue);
@@ -18,51 +20,44 @@ const PromptModal = ({ isOpen, onClose, onConfirm, title = "Input", message, def
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 win7-modal-overlay">
-            <div className="win7-window-container w-full max-w-sm shadow-2xl relative bg-[#f0f0f0]">
-                {/* Window Title Bar */}
-                <div className="win7-window-title flex justify-between items-center">
-                    <span>{title}</span>
-                    <button
-                        onClick={onClose}
-                        className="p-1 hover:bg-red-500 hover:text-white rounded transition-colors focus:outline-none"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
                 <form onSubmit={handleSubmit}>
-                    {/* Content */}
-                    <div className="p-6 flex flex-col gap-4">
-                        <div className="flex items-start gap-3">
-                            <Pencil size={24} className="text-[#1853db] mt-1" />
-                            <p className="text-sm text-gray-700 mt-1">{message}</p>
+                    <div className="p-6">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                                <Pencil size={20} className="text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                                {message && <p className="text-sm text-gray-500">{message}</p>}
+                            </div>
                         </div>
-                        <input
-                            autoFocus
-                            type="text"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            placeholder={placeholder}
-                            className="w-full px-3 py-2 border border-gray-300 rounded shadow-inner focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-sm"
-                        />
+
+                        <div className="py-2">
+                            <Input
+                                autoFocus
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={placeholder}
+                                className="w-full"
+                            />
+                        </div>
                     </div>
 
-                    {/* Footer / Buttons */}
-                    <div className="px-4 py-3 bg-[#f0f0f0] border-t border-[#d9d9d9] flex justify-end gap-2">
-                        <button
-                            type="submit"
-                            className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
-                        >
-                            OK
-                        </button>
-                        <button
+                    <div className="p-6 pt-0 bg-gray-50/50 flex justify-end gap-3 rounded-b-xl border-t border-gray-100">
+                        <Button
                             type="button"
+                            variant="secondary"
                             onClick={onClose}
-                            className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
                         >
                             Cancel
-                        </button>
+                        </Button>
+                        <Button
+                            type="submit"
+                        >
+                            Confirm
+                        </Button>
                     </div>
                 </form>
             </div>

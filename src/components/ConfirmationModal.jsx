@@ -1,48 +1,31 @@
 import React from 'react';
-import { HelpCircle, X } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
+import { Button } from './ui/Button';
 
 const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title = "Confirm", message }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 win7-modal-overlay">
-            <div className="win7-window-container w-full max-w-sm shadow-2xl relative bg-[#f0f0f0]">
-                {/* Window Title Bar */}
-                <div className="win7-window-title flex justify-between items-center">
-                    <span>{title}</span>
-                    <button
-                        onClick={onCancel}
-                        className="p-1 hover:bg-red-500 hover:text-white rounded transition-colors focus:outline-none"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex items-start gap-4">
-                    <div className="shrink-0">
-                        <HelpCircle size={32} className="text-[#1853db]" />
-                    </div>
-                    <div>
-                        <h3 className="text-[#1e395b] text-base mb-2 font-normal">Are you sure?</h3>
-                        <p className="text-sm text-gray-700">{message}</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="p-6">
+                    <div className="flex flex-col items-center text-center gap-4">
+                        <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600">
+                            <HelpCircle size={24} />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-semibold text-gray-900 leading-none">{title}</h3>
+                            <p className="text-sm text-gray-500 max-w-[280px] leading-relaxed mx-auto">{message}</p>
+                        </div>
                     </div>
                 </div>
-
-                {/* Footer / Buttons */}
-                <div className="px-4 py-3 bg-[#f0f0f0] border-t border-[#d9d9d9] flex justify-end gap-2">
-                    <button
-                        onClick={onConfirm}
-                        className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
-                    >
-                        Yes
-                    </button>
-                    <button
-                        onClick={onCancel}
-                        className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
-                    >
-                        No
-                    </button>
+                <div className="p-6 pt-0 flex gap-3">
+                    <Button variant="secondary" onClick={onCancel} className="w-full">
+                        Cancel
+                    </Button>
+                    <Button onClick={onConfirm} className="w-full">
+                        Confirm
+                    </Button>
                 </div>
             </div>
         </div>

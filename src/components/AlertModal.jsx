@@ -1,45 +1,33 @@
 import React from 'react';
-import { AlertTriangle, Info, X } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
+import { Button } from './ui/Button';
 
 const AlertModal = ({ isOpen, onClose, title = "Alert", message, type = "error" }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 win7-modal-overlay">
-            <div className="win7-window-container w-full max-w-sm shadow-2xl relative bg-[#f0f0f0]">
-                {/* Window Title Bar */}
-                <div className="win7-window-title flex justify-between items-center">
-                    <span>{title}</span>
-                    <button
-                        onClick={onClose}
-                        className="p-1 hover:bg-red-500 hover:text-white rounded transition-colors focus:outline-none"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex items-start gap-4">
-                    <div className="shrink-0">
-                        {type === 'error' ? (
-                            <AlertTriangle size={32} className="text-yellow-500" />
-                        ) : (
-                            <Info size={32} className="text-blue-500" />
-                        )}
-                    </div>
-                    <div>
-                        <p className="text-sm text-gray-700 mt-1.5">{message}</p>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="p-6">
+                    <div className="flex flex-col items-center text-center gap-4">
+                        <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${type === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                            }`}>
+                            {type === 'error' ? (
+                                <AlertTriangle size={24} />
+                            ) : (
+                                <Info size={24} />
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-semibold text-gray-900 leading-none">{title}</h3>
+                            <p className="text-sm text-gray-500 max-w-[280px] leading-relaxed mx-auto">{message}</p>
+                        </div>
                     </div>
                 </div>
-
-                {/* Footer / Buttons */}
-                <div className="px-4 py-3 bg-[#f0f0f0] border-t border-[#d9d9d9] flex justify-center">
-                    <button
-                        onClick={onClose}
-                        className="win7-button min-w-[80px] px-4 py-1.5 rounded text-sm font-inherit"
-                    >
+                <div className="p-6 pt-0">
+                    <Button onClick={onClose} className="w-full">
                         OK
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
