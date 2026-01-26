@@ -25,7 +25,7 @@ const EmailModal = ({ isOpen, onClose, onSend, defaultMessage = '' }) => {
                     <div className="p-6">
                         <div className="flex items-center gap-4 mb-6">
                             <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                                <Mail size={20} className="text-blue-600" />
+                                <Mail size={20} className="text-primary" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">Send for Signature</h3>

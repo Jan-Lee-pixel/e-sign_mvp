@@ -84,14 +84,14 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
                     <div className="flex border-b border-gray-100">
                         <button
                             onClick={() => setActiveTab('draw')}
-                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'draw' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'draw' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                         >
                             <PenTool size={16} />
                             Draw New
                         </button>
                         <button
                             onClick={() => setActiveTab('saved')}
-                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'saved' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'saved' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                         >
                             <LayoutGrid size={16} />
                             Saved Signatures
@@ -102,7 +102,7 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
                 <div className="p-6 overflow-y-auto">
                     {activeTab === 'draw' ? (
                         <>
-                            <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 overflow-hidden relative group hover:border-blue-400 transition-colors">
+                            <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 overflow-hidden relative group hover:border-primary transition-colors">
                                 <SignatureCanvas
                                     ref={sigCanvas}
                                     penColor="black"
@@ -111,7 +111,7 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
                                         className: 'w-full h-48 cursor-crosshair',
                                     }}
                                 />
-                                <div className="absolute top-2 left-2 text-xs text-gray-400 pointer-events-none select-none group-hover:text-blue-400">
+                                <div className="absolute top-2 left-2 text-xs text-gray-400 pointer-events-none select-none group-hover:text-primary">
                                     Sign here
                                 </div>
                             </div>
@@ -123,7 +123,7 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
                                         id="save-sig"
                                         checked={saveToProfile}
                                         onChange={(e) => setSaveToProfile(e.target.checked)}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        className="rounded border-gray-300 text-primary focus:ring-primary"
                                     />
                                     <label htmlFor="save-sig" className="text-sm text-gray-600 cursor-pointer select-none">
                                         Save this signature to my profile
@@ -155,14 +155,14 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
                                 <div className="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
                                     <PenTool size={32} className="mx-auto mb-2 opacity-20" />
                                     <p>No saved signatures found.</p>
-                                    <Button variant="link" onClick={() => setActiveTab('draw')} className="mt-2 text-blue-600">
+                                    <Button variant="link" onClick={() => setActiveTab('draw')} className="mt-2 text-primary">
                                         Draw one now
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-3">
                                     {savedSignatures.map((sig) => (
-                                        <div key={sig.id} className="group relative border border-gray-200 rounded-lg p-2 hover:border-blue-400 hover:shadow-sm transition-all cursor-pointer bg-white" onClick={() => handleSelectSaved(sig.signature_url)}>
+                                        <div key={sig.id} className="group relative border border-gray-200 rounded-lg p-2 hover:border-primary hover:shadow-sm transition-all cursor-pointer bg-white" onClick={() => handleSelectSaved(sig.signature_url)}>
                                             <img src={sig.signature_url} alt="Saved Signature" className="h-16 w-full object-contain" />
                                             <button
                                                 onClick={(e) => handleDeleteSaved(sig.id, e)}

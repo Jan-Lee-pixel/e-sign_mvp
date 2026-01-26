@@ -5,11 +5,11 @@ import { Loader2 } from "lucide-react";
 export const Button = React.forwardRef(
     ({ className, variant = "primary", size = "default", isLoading, children, disabled, ...props }, ref) => {
         const variants = {
-            primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm border border-transparent active:scale-[0.98]",
-            secondary: "bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm active:scale-[0.98]",
-            ghost: "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-            destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm active:scale-[0.98]",
-            outline: "bg-transparent border border-gray-200 text-gray-900 hover:bg-gray-50",
+            primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm border border-transparent active:scale-[0.98]",
+            secondary: "bg-secondary text-secondary-foreground border border-input hover:bg-secondary/80 shadow-sm active:scale-[0.98]",
+            ghost: "bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+            destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm active:scale-[0.98]",
+            outline: "bg-transparent border border-input text-foreground hover:bg-accent hover:text-accent-foreground",
         };
 
         const sizes = {
@@ -23,7 +23,7 @@ export const Button = React.forwardRef(
             <button
                 ref={ref}
                 className={cn(
-                    "inline-flex items-center justify-center rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50",
+                    "inline-flex items-center justify-center rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
                     variants[variant],
                     sizes[size],
                     className

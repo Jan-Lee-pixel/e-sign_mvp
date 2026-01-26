@@ -309,11 +309,11 @@ const ComposePage = () => {
                     </Button>
                     <div className="flex-1 max-w-lg">
                         <div className="flex items-center gap-2">
-                            <StickyNote className="w-5 h-5 text-blue-600" />
+                            <StickyNote className="w-5 h-5 text-primary" />
                             <input
                                 value={envelopeName}
                                 onChange={(e) => setEnvelopeName(e.target.value)}
-                                className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none text-lg font-semibold text-gray-900 placeholder-gray-400 w-full px-1 transition-colors"
+                                className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-primary focus:outline-none text-lg font-semibold text-gray-900 placeholder-gray-400 w-full px-1 transition-colors"
                                 placeholder="Name your document..."
                             />
                         </div>
@@ -334,7 +334,7 @@ const ComposePage = () => {
                         {!pdfFile ? (
                             <div className="text-center">
                                 <div className="p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-4">
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
                                         <UploadCloud size={24} />
                                     </div>
                                     <h3 className="text-sm font-medium text-gray-900 mb-1">Upload PDF</h3>
@@ -422,7 +422,7 @@ const ComposePage = () => {
                                                 </div>
                                                 <Button
                                                     onClick={() => setIsEmailModalOpen(true)}
-                                                    className="w-full bg-blue-600 hover:bg-blue-700"
+                                                    className="w-full bg-primary hover:bg-primary/90"
                                                 >
                                                     <Send size={16} className="mr-2" />
                                                     Send Email

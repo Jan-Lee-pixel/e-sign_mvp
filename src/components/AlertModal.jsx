@@ -10,7 +10,7 @@ const AlertModal = ({ isOpen, onClose, title = "Alert", message, type = "error" 
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-6">
                     <div className="flex flex-col items-center text-center gap-4">
-                        <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${type === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                        <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
                             }`}>
                             {type === 'error' ? (
                                 <AlertTriangle size={24} />

@@ -32,7 +32,7 @@ const PDFUploader = ({ onUpload, onError }) => {
                 type="button"
                 variant="outline"
                 onClick={handleButtonClick}
-                className="w-full h-12 border-dashed border-2 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                className="w-full h-12 border-dashed border-2 hover:border-primary hover:text-primary hover:bg-primary/5"
             >
                 <UploadCloud size={20} className="mr-2" />
                 Choose PDF

@@ -49,7 +49,7 @@ const AuthPage = () => {
             <div className="w-full max-w-md space-y-8">
                 {/* Header */}
                 <div className="flex flex-col items-center text-center">
-                    <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20 mb-6">
+                    <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 mb-6">
                         <PenTool className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -124,7 +124,7 @@ const AuthPage = () => {
                                     setIsSignUp(!isSignUp);
                                     setMessage(null);
                                 }}
-                                className="font-semibold text-blue-600 hover:text-blue-500 hover:underline transition-colors"
+                                className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors"
                             >
                                 {isSignUp ? 'Sign in' : 'Sign up'}
                             </button>

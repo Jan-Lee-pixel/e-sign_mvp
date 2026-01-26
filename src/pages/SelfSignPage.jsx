@@ -144,7 +144,7 @@ function SelfSignPage({ session }) {
                     </Button>
                     <div>
                         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900">
-                            <PenTool className="w-5 h-5 text-blue-600" />
+                            <PenTool className="w-5 h-5 text-primary" />
                             <span>Self-Sign Mode</span>
                         </h1>
                     </div>
@@ -153,7 +153,7 @@ function SelfSignPage({ session }) {
                 <div className="flex items-center gap-4">
                     {session?.user?.email && (
                         <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
                                 {session.user.email[0].toUpperCase()}
                             </div>
                             <span className="text-sm text-gray-600">{session.user.email}</span>
@@ -182,7 +182,7 @@ function SelfSignPage({ session }) {
                         {!pdfFile ? (
                             <div className="text-center">
                                 <div className="p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-4">
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
                                         <UploadCloud size={24} />
                                     </div>
                                     <h3 className="text-sm font-medium text-gray-900 mb-1">Upload Document</h3>

@@ -112,7 +112,7 @@ const DashboardPage = ({ session }) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <div className="bg-blue-600 p-1.5 rounded-lg text-white">
+                            <div className="bg-primary p-1.5 rounded-lg text-primary-foreground">
                                 <PenTool size={20} />
                             </div>
                             <span className="font-bold text-xl tracking-tight text-gray-900">E-Sign</span>
@@ -150,7 +150,7 @@ const DashboardPage = ({ session }) => {
                         </Button>
                         <Button
                             onClick={() => navigate('/compose')}
-                            className="shadow-lg shadow-blue-500/20"
+                            className="shadow-lg shadow-primary/20"
                         >
                             <Plus size={16} className="mr-2" />
                             New Envelope
@@ -172,7 +172,7 @@ const DashboardPage = ({ session }) => {
                     <div className="divide-y divide-gray-100">
                         {loading ? (
                             <div className="flex justify-center items-center py-20 text-gray-400">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                             </div>
                         ) : envelopes.length === 0 ? (
                             <div className="flex flex-col justify-center items-center py-20 text-gray-400 gap-3">
@@ -199,7 +199,7 @@ const DashboardPage = ({ session }) => {
                                     className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors cursor-pointer group"
                                 >
                                     <div className="col-span-12 sm:col-span-5 flex items-center gap-4">
-                                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${env.status === 'signed' ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'
+                                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${env.status === 'signed' ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
                                             }`}>
                                             <FileText size={20} />
                                         </div>
@@ -249,7 +249,7 @@ const DashboardPage = ({ session }) => {
                                                         downloadSignedPdf(env.signed_pdf_url || env.pdf_url, env.original_pdf_url);
                                                     }}
                                                     title="Download"
-                                                    className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                                                    className="h-8 w-8 text-gray-500 hover:text-primary"
                                                 >
                                                     <Download size={16} />
                                                 </Button>

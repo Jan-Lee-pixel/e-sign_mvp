@@ -101,7 +101,7 @@ const RecipientSignPage = () => {
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <span className="ml-2 text-gray-600">Loading document...</span>
         </div>
     );
@@ -197,7 +197,7 @@ const RecipientSignPage = () => {
                 <div className="flex items-center gap-4">
                     <div>
                         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900">
-                            <PenTool className="w-5 h-5 text-blue-600" />
+                            <PenTool className="w-5 h-5 text-primary" />
                             <span>E-Sign Guest</span>
                         </h1>
                         <p className="text-xs text-gray-500">Document Review</p>
@@ -239,7 +239,7 @@ const RecipientSignPage = () => {
                                             group w-full text-left p-4 rounded-xl border transition-all duration-200
                                             ${isSigned
                                                 ? 'bg-green-50 border-green-200 hover:border-green-300'
-                                                : 'bg-white border-gray-200 hover:border-blue-400 hover:shadow-md'}
+                                                : 'bg-white border-gray-200 hover:border-primary hover:shadow-md'}
                                         `}
                                     >
                                         <div className="flex items-start gap-4">
@@ -247,7 +247,7 @@ const RecipientSignPage = () => {
                                                 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0 border
                                                 ${isSigned
                                                     ? 'bg-green-500 border-green-600 text-white'
-                                                    : 'bg-gray-50 border-gray-200 text-gray-400 group-hover:border-blue-500 group-hover:text-blue-500'}
+                                                    : 'bg-gray-50 border-gray-200 text-gray-400 group-hover:border-primary group-hover:text-primary'}
                                             `}>
                                                 {isSigned ? <CheckCircle size={14} /> : <span className="text-xs font-bold">{idx + 1}</span>}
                                             </div>
@@ -305,7 +305,7 @@ const RecipientSignPage = () => {
                                                 setActiveField(field);
                                                 setIsSignatureModalOpen(true);
                                             }}
-                                            className="absolute bg-blue-500/10 border-2 border-blue-500 text-blue-700 font-bold py-2 px-4 rounded hover:scale-105 transition-transform hover:bg-blue-500/20 group pointer-events-auto"
+                                            className="absolute bg-primary/10 border-2 border-primary text-primary font-bold py-2 px-4 rounded hover:scale-105 transition-transform hover:bg-primary/20 group pointer-events-auto"
                                             style={{ left, top, width: 120, height: 50, zIndex: 20 }}
                                         >
                                             <div className="flex items-center justify-center gap-1.5">
@@ -333,7 +333,7 @@ const RecipientSignPage = () => {
             {isSaving && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">
                     <div className="bg-white rounded-xl p-8 flex flex-col items-center gap-4 shadow-2xl">
-                        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
                         <p className="text-gray-900 font-medium">Finalizing document...</p>
                     </div>
                 </div>

@@ -26,7 +26,7 @@ const PromptModal = ({ isOpen, onClose, onConfirm, title = "Input", message, def
                     <div className="p-6">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                                <Pencil size={20} className="text-blue-600" />
+                                <Pencil size={20} className="text-primary" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
