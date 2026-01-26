@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import PDFViewer from '../components/PDFViewer';
 import SignaturePad from '../components/SignaturePad';
 import { embedSignature } from '../utils/pdfUtils';
-import { PenTool, CheckCircle, AlertTriangle, ArrowLeft, Loader2, Info } from 'lucide-react';
+import { PenTool, CheckCircle, AlertTriangle, ArrowLeft, Loader2, Info, Pencil } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import { Button } from '../components/ui/Button';
 
@@ -290,10 +290,24 @@ const RecipientSignPage = () => {
                                         return (
                                             <div
                                                 key={idx}
-                                                className="absolute border border-green-500 bg-green-50/90 pointer-events-none flex items-center justify-center p-1 rounded backdrop-blur-sm"
+                                                className="absolute group pointer-events-auto"
                                                 style={{ left, top, width: 120, height: 50, zIndex: 20 }}
                                             >
-                                                <img src={signedFields[field.id]} alt="Signature" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                                <div className="w-full h-full border border-primary/50 bg-primary/5 p-1 rounded backdrop-blur-sm flex items-center justify-center">
+                                                    <img src={signedFields[field.id]} alt="Signature" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                                </div>
+
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveField(field);
+                                                        setIsSignatureModalOpen(true);
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full p-1.5 shadow-md hover:bg-primary/90 transition-transform hover:scale-105 z-30"
+                                                    title="Edit signature"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
                                             </div>
                                         )
                                     }

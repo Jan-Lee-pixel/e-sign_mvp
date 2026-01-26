@@ -40,6 +40,7 @@ function SelfSignPage({ session }) {
 
     // Array for signatures: { id, image, x, y, page }
     const [signatures, setSignatures] = useState([]);
+    const [editingSignatureId, setEditingSignatureId] = useState(null);
 
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,15 +58,27 @@ function SelfSignPage({ session }) {
     };
 
     const handleSignatureSave = (dataURL) => {
-        const newSig = {
-            id: crypto.randomUUID(),
-            image: dataURL,
-            x: 50,
-            y: 50,
-            page: pageNumber
-        };
-        setSignatures([...signatures, newSig]);
+        if (editingSignatureId) {
+            // Update existing signature
+            setSignatures(signatures.map(s => s.id === editingSignatureId ? { ...s, image: dataURL } : s));
+            setEditingSignatureId(null);
+        } else {
+            // Add new signature
+            const newSig = {
+                id: crypto.randomUUID(),
+                image: dataURL,
+                x: 50,
+                y: 50,
+                page: pageNumber
+            };
+            setSignatures([...signatures, newSig]);
+        }
         setIsSignatureModalOpen(false);
+    };
+
+    const handleEditSignature = (id) => {
+        setEditingSignatureId(id);
+        setIsSignatureModalOpen(true);
     };
 
     const updateSignaturePosition = (id, newPos) => {
@@ -260,6 +273,7 @@ function SelfSignPage({ session }) {
                                             initialPosition={{ x: sig.x, y: sig.y }}
                                             onPositionChange={(pos) => updateSignaturePosition(sig.id, pos)}
                                             onDelete={() => removeSignature(sig.id)}
+                                            onEdit={() => handleEditSignature(sig.id)}
                                             containerDimensions={pageDimensions}
                                         />
                                     );
@@ -281,7 +295,10 @@ function SelfSignPage({ session }) {
             {isSignatureModalOpen && (
                 <SignaturePad
                     onSave={handleSignatureSave}
-                    onCancel={() => setIsSignatureModalOpen(false)}
+                    onCancel={() => {
+                        setIsSignatureModalOpen(false);
+                        setEditingSignatureId(null);
+                    }}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
                     userId={session?.user?.id}
                 />
