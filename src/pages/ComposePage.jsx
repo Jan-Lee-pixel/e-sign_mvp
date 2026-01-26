@@ -4,11 +4,13 @@ import { supabase } from '../lib/supabase';
 import PDFUploader from '../components/PDFUploader';
 import PDFViewer from '../components/PDFViewer';
 import DraggablePlaceholder from '../components/DraggablePlaceholder';
-import { PenTool, Send, Link as LinkIcon, AlertCircle, CheckCircle } from 'lucide-react';
+import { PenTool, Send, Link as LinkIcon, AlertCircle, CheckCircle, ArrowLeft, Loader2, Copy, StickyNote, Plus, Trash2, UploadCloud } from 'lucide-react';
 import SuccessModal from '../components/SuccessModal';
 import EmailModal from '../components/EmailModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import AlertModal from '../components/AlertModal';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 import emailjs from '@emailjs/browser';
 
 const ComposePage = () => {
@@ -17,7 +19,7 @@ const ComposePage = () => {
 
     // Edit Mode State
     const [editingEnvelope, setEditingEnvelope] = useState(null);
-    const [pendingFields, setPendingFields] = useState(null); // Fields waiting for PDF dimensions
+    const [pendingFields, setPendingFields] = useState(null);
     const [envelopeName, setEnvelopeName] = useState("Untitled Envelope");
 
     // ... existing state
@@ -55,17 +57,16 @@ const ComposePage = () => {
             }));
 
             setFields(hydratedFields);
-            setPendingFields(null); // Clear to prevent re-hydration
+            setPendingFields(null);
         }
     }, [pageDimensions, pendingFields]);
 
     const initializeEditMode = async (envelope) => {
         setEditingEnvelope(envelope);
         setEnvelopeName(envelope.name || "Untitled Envelope");
-        setGeneratedLink(`${window.location.origin}/sign/${envelope.access_token}`); // Pre-fill link
+        setGeneratedLink(`${window.location.origin}/sign/${envelope.access_token}`);
 
         try {
-            // 1. Fetch original PDF
             const { data: fileData, error: fileError } = await supabase.storage
                 .from('envelopes')
                 .download(envelope.original_pdf_url);
@@ -75,7 +76,6 @@ const ComposePage = () => {
             setPdfFile(buffer.slice(0));
             setPdfBuffer(buffer.slice(0));
 
-            // 2. Fetch Fields
             const { data: fieldsData, error: fieldsError } = await supabase
                 .from('fields')
                 .select('*')
@@ -83,7 +83,6 @@ const ComposePage = () => {
 
             if (fieldsError) throw fieldsError;
 
-            // Store fields to be hydrated when page dimensions are known
             setPendingFields(fieldsData);
 
         } catch (err) {
@@ -93,14 +92,13 @@ const ComposePage = () => {
     };
 
     const handleUpload = (buffer, filename) => {
-        // Clone for separate usage
         setPdfFile(buffer.slice(0));
         setPdfBuffer(buffer.slice(0));
         setPageNumber(1);
         setFields([]);
         setGeneratedLink(null);
         setError(null);
-        setEditingEnvelope(null); // Reset edit mode on new upload
+        setEditingEnvelope(null);
         const nameWithoutExt = filename ? filename.replace(/\.pdf$/i, "") : "Untitled Envelope";
         setEnvelopeName(nameWithoutExt);
     };
@@ -123,21 +121,15 @@ const ComposePage = () => {
         const newDims = { width: 600, height: renderedHeight };
         setPageDimensions(newDims);
 
-        // Hydrate fields if pending
         if (pendingFields && pendingFields.length > 0) {
             const hydratedFields = pendingFields.map(pf => ({
-                id: pf.id || crypto.randomUUID(), // Ensure ID
+                id: pf.id || crypto.randomUUID(),
                 page: pf.page_number,
                 x: (pf.x_pct / 100) * 600,
                 y: (pf.y_pct / 100) * renderedHeight
             }));
-
-            // Only add fields that haven't been added yet (simple check) or just replace?
-            // Since we load PDF once, just setting fields is fine.
-            // But we need to handle pagination if multi-page. 
-            // Currently pendingFields has ALL fields. We should set them all.
             setFields(hydratedFields);
-            setPendingFields(null); // clear
+            setPendingFields(null);
         }
     };
 
@@ -186,10 +178,8 @@ const ComposePage = () => {
 
         try {
             if (editingEnvelope) {
-                // UPDATE EXISTING ENVELOPE
                 const envelopeId = editingEnvelope.id;
 
-                // 1. Delete old fields
                 const { error: deleteError } = await supabase
                     .from('fields')
                     .delete()
@@ -197,7 +187,6 @@ const ComposePage = () => {
 
                 if (deleteError) throw deleteError;
 
-                // 2. Insert new fields
                 if (!pageDimensions) throw new Error("Page dimensions not loaded");
 
                 const fieldsToInsert = fields.map(f => ({
@@ -205,7 +194,6 @@ const ComposePage = () => {
                     page_number: f.page,
                     x_pct: (f.x / pageDimensions.width) * 100,
                     y_pct: (f.y / pageDimensions.height) * 100
-                    // created_at will be now
                 }));
 
                 const { error: insertError } = await supabase
@@ -214,11 +202,9 @@ const ComposePage = () => {
 
                 if (insertError) throw insertError;
 
-                setIsSuccessModalOpen(true); // Re-use success modal? Or just toast?
-                // Maybe change SuccessModal title to "Changes Saved"
+                setIsSuccessModalOpen(true);
 
             } else {
-                // CREATE NEW ENVELOPE (Existing logic)
                 const fileName = `${crypto.randomUUID()}.pdf`;
                 const { data: uploadData, error: uploadError } = await supabase.storage
                     .from('envelopes')
@@ -237,7 +223,7 @@ const ComposePage = () => {
                         {
                             original_pdf_url: pdfPath,
                             access_token: accessToken,
-                            status: 'pending', // Default to pending
+                            status: 'pending',
                             sender_id: (await supabase.auth.getUser()).data.user?.id,
                             name: envelopeName
                         }
@@ -299,9 +285,8 @@ const ComposePage = () => {
                 'YAzn6fbluRSwQnvsG'
             );
 
-            // alert("Email sent successfully!");
             setIsEmailModalOpen(false);
-            setIsSuccessModalOpen(true); // Show success modal
+            setIsSuccessModalOpen(true);
         } catch (err) {
             console.error("Error sending email:", err);
             setAlertModal({ isOpen: true, title: "Email Failed", message: "Failed to send email.", type: "error" });
@@ -309,44 +294,51 @@ const ComposePage = () => {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#ededed] font-segoe">
+        <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50 font-sans">
             {/* Header */}
-            <header className="h-16 bg-[#1853db] text-white flex items-center justify-between px-4 shadow-md z-50 shrink-0 win7-aero-glass">
+            <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-50 shrink-0">
                 <div className="flex items-center gap-4 flex-1">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => window.history.back()}
-                        className="p-1 hover:bg-white/10 rounded transition-colors"
                         title="Back to Dashboard"
+                        className="text-gray-500 hover:text-gray-900"
                     >
-                        <div className="w-6 h-6 flex items-center justify-center font-bold text-xl">←</div>
-                    </button>
+                        <ArrowLeft size={20} />
+                    </Button>
                     <div className="flex-1 max-w-lg">
                         <div className="flex items-center gap-2">
-                            <PenTool className="w-5 h-5 opacity-80" />
+                            <StickyNote className="w-5 h-5 text-blue-600" />
                             <input
                                 value={envelopeName}
                                 onChange={(e) => setEnvelopeName(e.target.value)}
-                                className="bg-transparent border-b border-transparent hover:border-blue-300 focus:border-white focus:outline-none text-lg font-semibold text-white placeholder-blue-200 w-full"
+                                className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none text-lg font-semibold text-gray-900 placeholder-gray-400 w-full px-1 transition-colors"
                                 placeholder="Name your document..."
                             />
                         </div>
-                        <p className="text-xs text-blue-100 opacity-80 pl-7">Prepare Envelope</p>
+                        <p className="text-xs text-gray-500 pl-8">Prepare Envelope</p>
                     </div>
                 </div>
             </header>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-80 bg-[#f0f0f0] border-r border-[#999999] flex flex-col shrink-0 relative z-40">
-                    <div className="p-4 bg-gradient-to-b from-white to-[#e6e6e6] border-b border-[#b5b5b5]">
-                        <h2 className="text-[#1e395b] font-bold text-sm">Tools</h2>
+                <aside className="w-80 bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-40">
+                    <div className="p-6 border-b border-gray-100">
+                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Preparation Tools</h2>
+                        <p className="text-xs text-gray-500 mt-1">Setup your document for signing.</p>
                     </div>
 
-                    <div className="p-4 flex flex-col gap-6 overflow-y-auto flex-1">
+                    <div className="p-6 flex flex-col gap-6 overflow-y-auto flex-1">
                         {!pdfFile ? (
-                            <div className="win7-window-container bg-white p-4">
-                                <h3 className="text-sm font-bold text-gray-700 mb-2">Step 1: Upload</h3>
-                                <div className="p-2 border border-dashed border-gray-400 bg-gray-50 rounded">
+                            <div className="text-center">
+                                <div className="p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-4">
+                                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <UploadCloud size={24} />
+                                    </div>
+                                    <h3 className="text-sm font-medium text-gray-900 mb-1">Upload PDF</h3>
+                                    <p className="text-xs text-gray-500 mb-4">Upload a document to prepare.</p>
                                     <PDFUploader
                                         onUpload={handleUpload}
                                         onError={(msg) => setAlertModal({ isOpen: true, title: "Upload Error", message: msg, type: "error" })}
@@ -354,119 +346,127 @@ const ComposePage = () => {
                                 </div>
                             </div>
                         ) : (
-                            <>
-                                <div className="win7-window-container bg-white p-4">
-                                    <h3 className="text-sm font-bold text-gray-700 mb-2">Signature Fields</h3>
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Signature Fields</h3>
                                     <p className="text-xs text-gray-500 mb-3">Add boxes where the recipient should sign.</p>
 
                                     <div className="flex gap-2 mb-2">
-                                        <button
+                                        <Button
                                             onClick={addField}
-                                            className="flex-1 py-2 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded hover:bg-yellow-200 transition-colors flex items-center justify-center gap-2 font-semibold text-sm"
+                                            variant="secondary"
+                                            className="w-full justify-center"
                                         >
-                                            <PenTool size={14} />
+                                            <Plus size={16} className="mr-2" />
                                             Add Box
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={clearAllFields}
+                                            variant="ghost"
+                                            size="icon"
                                             disabled={fields.length === 0}
-                                            className="px-3 py-2 bg-red-100 border border-red-300 text-red-800 rounded hover:bg-red-200 transition-colors flex items-center justify-center disabled:opacity-50"
                                             title="Clear All"
+                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
                                         >
-                                            <span className="text-xs font-bold">×</span>
-                                        </button>
+                                            <Trash2 size={16} />
+                                        </Button>
                                     </div>
-                                    <p className="text-xs text-gray-400 italic">Double-click a box on canvas to remove it.</p>
+                                    <p className="text-xs text-gray-400 italic flex items-center gap-1">
+                                        <AlertCircle size={10} />
+                                        Double-click a box to remove it.
+                                    </p>
                                 </div>
 
-                                <div className="win7-window-container bg-white p-4">
-                                    <h3 className="text-sm font-bold text-gray-700 mb-2">Actions</h3>
+                                <div className="pt-6 border-t border-gray-100">
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Actions</h3>
                                     <div className="flex flex-col gap-3">
                                         {(!generatedLink || editingEnvelope) ? (
-                                            <button
+                                            <Button
                                                 onClick={handleSend}
                                                 disabled={fields.length === 0 || isSending}
-                                                className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded font-semibold shadow transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-green-600"
+                                                isLoading={isSending}
+                                                className="w-full"
                                             >
                                                 {isSending ? (editingEnvelope ? 'Saving...' : 'Sending...') : (
                                                     <>
-                                                        {editingEnvelope ? <CheckCircle size={16} /> : <LinkIcon size={16} />}
+                                                        {editingEnvelope ? <CheckCircle size={16} className="mr-2" /> : <LinkIcon size={16} className="mr-2" />}
                                                         {editingEnvelope ? 'Save Changes' : 'Generate Link'}
                                                     </>
                                                 )}
-                                            </button>
+                                            </Button>
                                         ) : null}
 
                                         {generatedLink && (
-                                            <>
+                                            <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                                                 {!editingEnvelope && (
-                                                    <div className="bg-green-500/20 px-3 py-2 rounded text-sm border border-green-400/30 text-green-800 flex items-center gap-2">
-                                                        <CheckCircle size={14} />
+                                                    <div className="bg-green-50 px-3 py-2 rounded-lg border border-green-100 text-green-700 text-sm flex items-center gap-2">
+                                                        <CheckCircle size={16} />
                                                         Link Ready!
                                                     </div>
                                                 )}
-                                                <div className="flex gap-1">
-                                                    <input
+                                                <div className="flex gap-2">
+                                                    <Input
                                                         readOnly
                                                         value={generatedLink}
-                                                        className="flex-grow border rounded px-2 py-1 text-xs bg-gray-50 text-gray-600"
+                                                        className="text-xs h-9 bg-gray-50"
                                                     />
-                                                    <button
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="icon"
                                                         onClick={() => navigator.clipboard.writeText(generatedLink)}
-                                                        className="bg-gray-200 hover:bg-gray-300 border border-gray-400 px-2 py-1 rounded"
-                                                        title="Copy"
+                                                        title="Copy Link"
+                                                        className="h-9 w-9 shrink-0"
                                                     >
-                                                        <LinkIcon size={12} />
-                                                    </button>
+                                                        <Copy size={14} />
+                                                    </Button>
                                                 </div>
-                                                <button
+                                                <Button
                                                     onClick={() => setIsEmailModalOpen(true)}
-                                                    className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-semibold shadow transition-all flex items-center justify-center gap-2 border border-blue-600"
+                                                    className="w-full bg-blue-600 hover:bg-blue-700"
                                                 >
-                                                    <Send size={16} />
+                                                    <Send size={16} className="mr-2" />
                                                     Send Email
-                                                </button>
-                                            </>
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
                 </aside>
 
                 {/* Main Canvas */}
-                <main className="flex-1 bg-[#8c8c8c] overflow-auto flex justify-center p-8 relative win7-wallpaper-pattern shadow-inner">
+                <main className="flex-1 bg-gray-100/50 overflow-auto flex justify-center p-8 relative">
                     {pdfFile ? (
-                        <div className="relative h-fit my-auto shadow-2xl">
-                            <div className="win7-window-container p-0 overflow-hidden border-none ring-1 ring-black/20">
-                                <div className="bg-white">
-                                    <PDFViewer
-                                        pdfFile={pdfFile}
-                                        pageNumber={pageNumber}
-                                        onPageChange={setPageNumber}
-                                        onPageLoad={handlePageLoad}
-                                    >
-                                        {fields.map(field => {
-                                            if (field.page !== pageNumber) return null;
-                                            return (
-                                                <div key={field.id} onDoubleClick={() => removeField(field.id)}>
-                                                    <DraggablePlaceholder
-                                                        initialPosition={{ x: field.x, y: field.y }}
-                                                        onPositionChange={(pos) => updateFieldPosition(field.id, pos)}
-                                                        containerDimensions={pageDimensions}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </PDFViewer>
-                                </div>
-                            </div>
+                        <div className="relative h-fit my-auto shadow-xl ring-1 ring-black/5 bg-white">
+                            <PDFViewer
+                                pdfFile={pdfFile}
+                                pageNumber={pageNumber}
+                                onPageChange={setPageNumber}
+                                onPageLoad={handlePageLoad}
+                            >
+                                {fields.map(field => {
+                                    if (field.page !== pageNumber) return null;
+                                    return (
+                                        <div key={field.id} onDoubleClick={() => removeField(field.id)}>
+                                            <DraggablePlaceholder
+                                                initialPosition={{ x: field.x, y: field.y }}
+                                                onPositionChange={(pos) => updateFieldPosition(field.id, pos)}
+                                                containerDimensions={pageDimensions}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </PDFViewer>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-white/50">
-                            <div className="text-6xl font-light mb-4">↑</div>
-                            <p className="text-xl">Upload a PDF to get started</p>
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                <PenTool size={40} className="opacity-20 text-gray-500" />
+                            </div>
+                            <p className="text-lg font-medium text-gray-500">No document loaded</p>
+                            <p className="text-sm text-gray-400 mt-1">Upload a PDF from the sidebar to get started</p>
                         </div>
                     )}
                 </main>

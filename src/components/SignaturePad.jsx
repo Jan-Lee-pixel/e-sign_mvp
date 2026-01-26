@@ -1,66 +1,182 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import { X } from 'lucide-react';
+import { Eraser, Check, X, Save, Trash2, PenTool, LayoutGrid } from 'lucide-react';
+import { Button } from './ui/Button';
+import { supabase } from '../lib/supabase';
 
-const SignaturePad = ({ onSave, onCancel, onWarning }) => {
+const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
     const sigCanvas = useRef({});
+    const [activeTab, setActiveTab] = useState('draw'); // 'draw' or 'saved'
+    const [savedSignatures, setSavedSignatures] = useState([]);
+    const [saveToProfile, setSaveToProfile] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (userId && activeTab === 'saved') {
+            fetchSignatures();
+        }
+    }, [userId, activeTab]);
+
+    const fetchSignatures = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('signatures')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (data) setSavedSignatures(data);
+        if (error) console.error("Error fetching signatures:", error);
+        setLoading(false);
+    };
 
     const clear = () => sigCanvas.current.clear();
 
-    const save = () => {
+    const save = async () => {
         if (sigCanvas.current.isEmpty()) {
-            if (onWarning) {
-                onWarning("Please provide a signature first.");
-            } else {
-                alert("Please provide a signature first.");
-            }
+            if (onWarning) onWarning("Please provide a signature first.");
+            else alert("Please provide a signature first.");
             return;
         }
+
         const dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');
+
+        if (userId && saveToProfile) {
+            // Save to database
+            const { error } = await supabase
+                .from('signatures')
+                .insert([{ user_id: userId, signature_url: dataURL }]);
+
+            if (error) {
+                console.error("Error saving signature:", error);
+                if (onWarning) onWarning("Failed to save to profile, but continuing locally.");
+            }
+        }
+
         onSave(dataURL);
     };
 
+    const handleSelectSaved = (url) => {
+        onSave(url);
+    };
+
+    const handleDeleteSaved = async (id, e) => {
+        e.stopPropagation();
+        if (!confirm("Delete this saved signature?")) return;
+
+        const { error } = await supabase.from('signatures').delete().eq('id', id);
+        if (!error) {
+            setSavedSignatures(prev => prev.filter(s => s.id !== id));
+        }
+    };
+
     return (
-        <div className="win7-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="aero-glass rounded w-full max-w-lg">
-                {/* Title Bar */}
-                <div className="win7-window-title flex justify-between items-center">
-                    <span>Create Signature</span>
-                    <button
-                        onClick={onCancel}
-                        className="text-gray-600 hover:text-gray-900"
-                    >
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 className="text-lg font-semibold text-gray-900">Sign Document</h3>
+                    <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 text-gray-500">
                         <X size={20} />
-                    </button>
+                    </Button>
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                    <div className="border-2 border-gray-300 rounded bg-white mb-4">
-                        <SignatureCanvas
-                            ref={sigCanvas}
-                            penColor="black"
-                            canvasProps={{
-                                className: 'w-full h-48',
-                            }}
-                        />
+                {userId && (
+                    <div className="flex border-b border-gray-100">
+                        <button
+                            onClick={() => setActiveTab('draw')}
+                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'draw' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            <PenTool size={16} />
+                            Draw New
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('saved')}
+                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'saved' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            <LayoutGrid size={16} />
+                            Saved Signatures
+                        </button>
                     </div>
+                )}
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-2">
-                        <button
-                            onClick={clear}
-                            className="win7-button px-4 py-2 rounded text-sm font-semibold"
-                        >
-                            Clear
-                        </button>
-                        <button
-                            onClick={save}
-                            className="win7-button-primary px-4 py-2 rounded text-sm font-semibold"
-                        >
-                            Use Signature
-                        </button>
-                    </div>
+                <div className="p-6 overflow-y-auto">
+                    {activeTab === 'draw' ? (
+                        <>
+                            <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 overflow-hidden relative group hover:border-blue-400 transition-colors">
+                                <SignatureCanvas
+                                    ref={sigCanvas}
+                                    penColor="black"
+                                    velocityFilterWeight={0.7}
+                                    canvasProps={{
+                                        className: 'w-full h-48 cursor-crosshair',
+                                    }}
+                                />
+                                <div className="absolute top-2 left-2 text-xs text-gray-400 pointer-events-none select-none group-hover:text-blue-400">
+                                    Sign here
+                                </div>
+                            </div>
+
+                            {userId && (
+                                <div className="mt-4 flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="save-sig"
+                                        checked={saveToProfile}
+                                        onChange={(e) => setSaveToProfile(e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="save-sig" className="text-sm text-gray-600 cursor-pointer select-none">
+                                        Save this signature to my profile
+                                    </label>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-3 mt-6">
+                                <Button
+                                    variant="secondary"
+                                    onClick={clear}
+                                >
+                                    <Eraser size={16} className="mr-2" />
+                                    Clear
+                                </Button>
+                                <Button
+                                    onClick={save}
+                                >
+                                    <Check size={16} className="mr-2" />
+                                    Use Signature
+                                </Button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="space-y-4">
+                            {loading ? (
+                                <div className="py-10 text-center text-gray-400">Loading saved signatures...</div>
+                            ) : savedSignatures.length === 0 ? (
+                                <div className="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+                                    <PenTool size={32} className="mx-auto mb-2 opacity-20" />
+                                    <p>No saved signatures found.</p>
+                                    <Button variant="link" onClick={() => setActiveTab('draw')} className="mt-2 text-blue-600">
+                                        Draw one now
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {savedSignatures.map((sig) => (
+                                        <div key={sig.id} className="group relative border border-gray-200 rounded-lg p-2 hover:border-blue-400 hover:shadow-sm transition-all cursor-pointer bg-white" onClick={() => handleSelectSaved(sig.signature_url)}>
+                                            <img src={sig.signature_url} alt="Saved Signature" className="h-16 w-full object-contain" />
+                                            <button
+                                                onClick={(e) => handleDeleteSaved(sig.id, e)}
+                                                className="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-// import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-// import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { Button } from './ui/Button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Set worker source - essential for react-pdf
 // Using unpkg CDN for simplicity in MVP, version matches installed react-pdf (usually latest)
@@ -19,7 +19,7 @@ const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange, onPageLoad }) 
 
     return (
         <div className="flex flex-col items-center">
-            <div className="border shadow-lg relative">
+            <div className="border border-gray-200 shadow-md relative bg-white">
                 <Document
                     file={pdfFile}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -43,24 +43,28 @@ const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange, onPageLoad }) 
             </div>
 
             {numPages && (
-                <div className="flex gap-3 items-center justify-center mt-4">
-                    <button
+                <div className="flex gap-4 items-center justify-center mt-6 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         disabled={pageNumber <= 1}
                         onClick={() => onPageChange(pageNumber - 1)}
-                        className="win7-button px-4 py-1.5 rounded text-sm font-semibold disabled:opacity-40"
                     >
+                        <ChevronLeft size={16} className="mr-1" />
                         Previous
-                    </button>
-                    <span className="text-sm font-semibold text-gray-700">
+                    </Button>
+                    <span className="text-sm font-medium text-gray-700 font-mono">
                         Page {pageNumber} of {numPages}
                     </span>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         disabled={pageNumber >= numPages}
                         onClick={() => onPageChange(pageNumber + 1)}
-                        className="win7-button px-4 py-1.5 rounded text-sm font-semibold disabled:opacity-40"
                     >
                         Next
-                    </button>
+                        <ChevronRight size={16} className="ml-1" />
+                    </Button>
                 </div>
             )}
         </div>

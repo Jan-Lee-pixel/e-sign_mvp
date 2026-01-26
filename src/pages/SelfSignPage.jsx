@@ -6,9 +6,10 @@ import SignaturePad from '../components/SignaturePad';
 import DraggableSignature from '../components/DraggableSignature';
 import { embedSignature } from '../utils/pdfUtils';
 import { supabase } from '../lib/supabase';
-import { PenTool, Download, LogOut, User, Settings, Menu, Send, CheckCircle } from 'lucide-react';
+import { PenTool, Download, LogOut, CheckCircle, Trash2, ArrowLeft, Loader2, UploadCloud } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
 import AlertModal from '../components/AlertModal';
+import { Button } from '../components/ui/Button';
 
 // ... imports ...
 
@@ -128,133 +129,150 @@ function SelfSignPage({ session }) {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#ededed] font-segoe">
+        <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50 font-sans">
             {/* Header */}
-            <header className="h-16 bg-[#1853db] text-white flex items-center justify-between px-6 shadow-md z-50 shrink-0 win7-aero-glass">
+            <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-50 shrink-0">
                 <div className="flex items-center gap-4">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => navigate('/dashboard')}
-                        className="p-1 hover:bg-white/10 rounded transition-colors"
                         title="Back to Dashboard"
+                        className="text-gray-500 hover:text-gray-900"
                     >
-                        <div className="w-6 h-6 flex items-center justify-center font-bold text-xl">←</div>
-                    </button>
+                        <ArrowLeft size={20} />
+                    </Button>
                     <div>
-                        <h1 className="text-xl font-semibold flex items-center gap-2 text-white text-shadow-sm">
-                            <PenTool className="w-6 h-6" />
-                            <span>E-Sign Self-Sign</span>
+                        <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900">
+                            <PenTool className="w-5 h-5 text-blue-600" />
+                            <span>Self-Sign Mode</span>
                         </h1>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <span className="text-sm opacity-80">Welcome, {session?.user?.email}</span>
-                    <button
+                    {session?.user?.email && (
+                        <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">
+                                {session.user.email[0].toUpperCase()}
+                            </div>
+                            <span className="text-sm text-gray-600">{session.user.email}</span>
+                        </div>
+                    )}
+                    <Button
+                        variant="secondary"
                         onClick={handleSignOut}
-                        className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded border border-white/20 text-sm flex items-center gap-2 transition-colors"
+                        className="text-gray-600"
                     >
-                        <LogOut size={14} />
+                        <LogOut size={16} className="mr-2" />
                         Sign Out
-                    </button>
+                    </Button>
                 </div>
             </header>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-72 bg-[#f0f0f0] border-r border-[#999999] flex flex-col shrink-0 relative z-40">
-                    <div className="p-4 bg-gradient-to-b from-white to-[#e6e6e6] border-b border-[#b5b5b5]">
-                        <h2 className="text-[#1e395b] font-bold text-sm">Review & Sign</h2>
+                <aside className="w-80 bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-40">
+                    <div className="p-6 border-b border-gray-100">
+                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Document Tools</h2>
+                        <p className="text-xs text-gray-500 mt-1">Manage your document and signatures.</p>
                     </div>
 
-                    <div className="p-4 flex flex-col gap-6 overflow-y-auto flex-1">
-                        <div className="win7-window-container bg-white p-4">
-                            {!pdfFile ? (
-                                <>
-                                    <h3 className="text-sm font-bold text-gray-700 mb-2">Upload</h3>
-                                    <p className="text-xs text-gray-500 mb-3">Select a PDF file from your computer to sign.</p>
+                    <div className="p-6 flex flex-col gap-6 overflow-y-auto flex-1">
+                        {!pdfFile ? (
+                            <div className="text-center">
+                                <div className="p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-4">
+                                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <UploadCloud size={24} />
+                                    </div>
+                                    <h3 className="text-sm font-medium text-gray-900 mb-1">Upload Document</h3>
+                                    <p className="text-xs text-gray-500 mb-4">Select a PDF file to begin signing.</p>
                                     <PDFUploader
                                         onUpload={handleUpload}
                                         onError={(msg) => setAlertModal({ isOpen: true, title: "Upload Error", message: msg, type: "error" })}
                                     />
-                                </>
-                            ) : (
-                                <>
-                                    <h3 className="text-sm font-bold text-gray-700 mb-2">Sign Tools</h3>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Signatures</h3>
                                     <div className="flex gap-2 mb-4">
-                                        <button
+                                        <Button
                                             onClick={() => setIsSignatureModalOpen(true)}
-                                            className="flex-1 py-2 bg-blue-100 border border-blue-300 text-blue-900 rounded hover:bg-blue-200 transition-colors flex items-center justify-center gap-2 font-semibold text-sm"
+                                            className="w-full justify-center"
                                         >
-                                            <PenTool size={14} />
+                                            <PenTool size={16} className="mr-2" />
                                             Add Signature
-                                        </button>
-                                        <button
-                                            onClick={clearSignatures}
-                                            disabled={signatures.length === 0}
-                                            className="px-3 py-2 bg-red-100 border border-red-300 text-red-800 rounded hover:bg-red-200 transition-colors flex items-center justify-center disabled:opacity-50"
-                                            title="Clear All"
-                                        >
-                                            <span className="text-xs font-bold">×</span>
-                                        </button>
+                                        </Button>
                                     </div>
 
                                     {signatures.length > 0 && (
-                                        <div className="mb-4 text-xs text-green-600 flex items-center gap-1 bg-green-50 p-2 rounded border border-green-200">
-                                            <CheckCircle size={12} />
-                                            {signatures.length} signature(s) added
+                                        <div className="p-3 bg-green-50 border border-green-100 rounded-lg flex items-center justify-between group">
+                                            <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+                                                <CheckCircle size={16} />
+                                                <span>{signatures.length} signature{signatures.length !== 1 ? 's' : ''} added</span>
+                                            </div>
+                                            <button
+                                                onClick={clearSignatures}
+                                                className="text-green-600 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
+                                                title="Clear all signatures"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
                                         </div>
                                     )}
+                                </div>
 
-                                    <div className="border-t pt-4">
-                                        <h3 className="text-sm font-bold text-gray-700 mb-2">Actions</h3>
-                                        <button
-                                            onClick={handleDownload}
-                                            className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded font-semibold shadow-lg transition-all flex items-center justify-center gap-2 border border-green-600 disabled:opacity-50"
-                                            disabled={isProcessing || signatures.length === 0}
-                                        >
-                                            <Download size={16} />
-                                            {isProcessing ? "Saving..." : "Download PDF"}
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                                <div className="pt-6 border-t border-gray-100">
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Actions</h3>
+                                    <Button
+                                        onClick={handleDownload}
+                                        disabled={isProcessing || signatures.length === 0}
+                                        isLoading={isProcessing}
+                                        className="w-full bg-green-600 hover:bg-green-700 ring-green-600"
+                                    >
+                                        {isProcessing ? "Saving..." : "Download Signed PDF"}
+                                        {!isProcessing && <Download size={18} className="ml-2" />}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </aside>
 
                 {/* Main Canvas */}
-                <main className="flex-1 bg-[#8c8c8c] overflow-auto flex justify-center p-8 relative win7-wallpaper-pattern shadow-inner">
+                <main className="flex-1 bg-gray-100/50 overflow-auto flex justify-center p-8 relative">
                     {pdfFile ? (
-                        <div className="relative h-fit my-auto shadow-2xl">
-                            <div className="win7-window-container p-0 overflow-hidden border-none ring-1 ring-black/20">
-                                <div className="bg-white">
-                                    <PDFViewer
-                                        pdfFile={pdfFile}
-                                        pageNumber={pageNumber}
-                                        onPageChange={setPageNumber}
-                                        onPageLoad={handlePageLoad}
-                                    >
-                                        {signatures.map(sig => {
-                                            if (sig.page !== pageNumber) return null;
-                                            return (
-                                                <DraggableSignature
-                                                    key={sig.id}
-                                                    imageSrc={sig.image}
-                                                    initialPosition={{ x: sig.x, y: sig.y }}
-                                                    onPositionChange={(pos) => updateSignaturePosition(sig.id, pos)}
-                                                    onDelete={() => removeSignature(sig.id)}
-                                                    containerDimensions={pageDimensions}
-                                                />
-                                            );
-                                        })}
-                                    </PDFViewer>
-                                </div>
-                            </div>
+                        <div className="relative h-fit my-auto shadow-xl ring-1 ring-black/5 bg-white">
+                            <PDFViewer
+                                pdfFile={pdfFile}
+                                pageNumber={pageNumber}
+                                onPageChange={setPageNumber}
+                                onPageLoad={handlePageLoad}
+                            >
+                                {signatures.map(sig => {
+                                    if (sig.page !== pageNumber) return null;
+                                    return (
+                                        <DraggableSignature
+                                            key={sig.id}
+                                            imageSrc={sig.image}
+                                            initialPosition={{ x: sig.x, y: sig.y }}
+                                            onPositionChange={(pos) => updateSignaturePosition(sig.id, pos)}
+                                            onDelete={() => removeSignature(sig.id)}
+                                            containerDimensions={pageDimensions}
+                                        />
+                                    );
+                                })}
+                            </PDFViewer>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-white/50">
-                            <PenTool size={64} className="mb-4 opacity-50" />
-                            <p className="text-xl">No document loaded</p>
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                <PenTool size={40} className="opacity-20 text-gray-500" />
+                            </div>
+                            <p className="text-lg font-medium text-gray-500">No document loaded</p>
+                            <p className="text-sm text-gray-400 mt-1">Upload a PDF from the sidebar to get started</p>
                         </div>
                     )}
                 </main>
@@ -265,6 +283,7 @@ function SelfSignPage({ session }) {
                     onSave={handleSignatureSave}
                     onCancel={() => setIsSignatureModalOpen(false)}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
+                    userId={session?.user?.id}
                 />
             )}
 
