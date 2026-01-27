@@ -6,7 +6,6 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     const location = useLocation();
 
     const navItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
         { id: 'all', label: 'All Documents', icon: '📄' },
         { id: 'pending', label: 'Pending Signature', icon: '✍️' },
         { id: 'signed', label: 'Completed', icon: '✓' },
@@ -14,7 +13,6 @@ const Sidebar = ({ activeTab, onTabChange }) => {
 
     const toolItems = [
         { id: 'self-sign', label: 'Self Sign', icon: '✒️', path: '/self-sign' },
-        { id: 'settings', label: 'Settings', icon: '⚙️' },
     ];
 
     const handleClick = (item) => {

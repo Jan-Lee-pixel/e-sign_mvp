@@ -161,7 +161,7 @@ const DashboardPage = ({ session }) => {
         });
     };
 
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState('all');
 
     const filteredEnvelopes = envelopes.filter(env => {
         if (activeTab === 'all') return true;

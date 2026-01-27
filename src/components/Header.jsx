@@ -12,9 +12,6 @@ const Header = ({ userEmail, onSignOut, isPro, onGetStarted }) => {
                     E-Sign
                 </div>
                 <div className="flex gap-8 items-center max-md:hidden">
-                    <a href="#dashboard" className="text-[var(--template-text-secondary)] hover:text-[var(--template-primary)] font-medium transition-colors relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[var(--template-primary)] after:transition-all hover:after:w-full">Dashboard</a>
-                    <div className="text-[var(--template-text-secondary)] font-medium">{userEmail}</div>
-
                     {isPro ? (
                         <span className="bg-gradient-to-r from-[var(--template-warning)] to-[#D69520] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-[var(--template-shadow-sm)]">
                             PRO
@@ -27,6 +24,7 @@ const Header = ({ userEmail, onSignOut, isPro, onGetStarted }) => {
                             Upgrade
                         </button>
                     )}
+                    <div className="text-[var(--template-text-secondary)] font-medium">{userEmail}</div>
 
                     <button
                         onClick={onSignOut}
