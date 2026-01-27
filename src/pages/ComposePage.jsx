@@ -294,51 +294,57 @@ const ComposePage = () => {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50 font-sans">
+        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)]">
             {/* Header */}
-            <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-50 shrink-0">
-                <div className="flex items-center gap-4 flex-1">
+            <header className="h-20 bg-[rgba(253,252,248,0.95)] backdrop-blur-xl border-b border-[var(--template-border)] flex items-center justify-between px-8 shadow-sm z-50 shrink-0 animate-[slideDown_0.5s_ease-out]">
+                <div className="flex items-center gap-6 flex-1">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => window.history.back()}
                         title="Back to Dashboard"
-                        className="text-gray-500 hover:text-gray-900"
+                        className="text-[var(--template-text-secondary)] hover:text-[var(--template-primary)] hover:bg-transparent transition-colors"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={24} />
                     </Button>
-                    <div className="flex-1 max-w-lg">
-                        <div className="flex items-center gap-2">
-                            <StickyNote className="w-5 h-5 text-primary" />
+                    <div className="h-8 w-[1px] bg-[var(--template-border)]"></div>
+
+                    <div className="flex items-center gap-3" title="E-Sign">
+                        <img src="/esign-icon.png" alt="E-Sign" className="w-8 h-8" />
+                        <span className="font-['Crimson_Pro'] text-xl font-bold text-[var(--template-primary)] hidden sm:block">E-Sign</span>
+                    </div>
+
+                    <div className="flex-1 max-w-lg ml-6">
+                        <div className="flex items-center gap-2 group">
+                            <StickyNote className="w-5 h-5 text-[var(--template-primary)] opacity-50 group-hover:opacity-100 transition-opacity" />
                             <input
                                 value={envelopeName}
                                 onChange={(e) => setEnvelopeName(e.target.value)}
-                                className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-primary focus:outline-none text-lg font-semibold text-gray-900 placeholder-gray-400 w-full px-1 transition-colors"
+                                className="bg-transparent border-b border-transparent hover:border-[var(--template-border)] focus:border-[var(--template-primary)] focus:outline-none text-lg font-semibold text-[var(--template-text-primary)] placeholder-[var(--template-text-light)] w-full px-2 py-1 transition-all"
                                 placeholder="Name your document..."
                             />
                         </div>
-                        <p className="text-xs text-gray-500 pl-8">Prepare Envelope</p>
                     </div>
                 </div>
             </header>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-80 bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-40">
-                    <div className="p-6 border-b border-gray-100">
-                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Preparation Tools</h2>
-                        <p className="text-xs text-gray-500 mt-1">Setup your document for signing.</p>
+                <aside className="w-80 bg-white/60 backdrop-blur-md border-r border-[var(--template-border)] flex flex-col shrink-0 relative z-40 shadow-[var(--template-shadow-sm)]">
+                    <div className="p-6 border-b border-[var(--template-border)]">
+                        <h2 className="text-xs font-bold text-[var(--template-primary)] uppercase tracking-widest font-['Crimson_Pro']">Preparation Tools</h2>
+                        <p className="text-xs text-[var(--template-text-light)] mt-2">Setup your document for signing.</p>
                     </div>
 
                     <div className="p-6 flex flex-col gap-6 overflow-y-auto flex-1">
                         {!pdfFile ? (
-                            <div className="text-center">
-                                <div className="p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-4">
-                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <UploadCloud size={24} />
+                            <div className="text-center animate-[fadeIn_0.5s_ease-out]">
+                                <div className="p-8 border-2 border-dashed border-[var(--template-border)] rounded-2xl bg-[var(--template-bg-secondary)] mb-6 hover:border-[var(--template-primary)] transition-colors group">
+                                    <div className="w-14 h-14 bg-[var(--template-primary)]/10 text-[var(--template-primary)] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                        <UploadCloud size={28} />
                                     </div>
-                                    <h3 className="text-sm font-medium text-gray-900 mb-1">Upload PDF</h3>
-                                    <p className="text-xs text-gray-500 mb-4">Upload a document to prepare.</p>
+                                    <h3 className="text-base font-semibold text-[var(--template-text-primary)] mb-1">Upload PDF</h3>
+                                    <p className="text-sm text-[var(--template-text-light)] mb-6">Upload a document to prepare.</p>
                                     <PDFUploader
                                         onUpload={handleUpload}
                                         onError={(msg) => setAlertModal({ isOpen: true, title: "Upload Error", message: msg, type: "error" })}
@@ -346,18 +352,18 @@ const ComposePage = () => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-6">
+                            <div className="space-y-8 animate-[slideRight_0.5s_ease-out]">
                                 <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Signature Fields</h3>
-                                    <p className="text-xs text-gray-500 mb-3">Add boxes where the recipient should sign.</p>
+                                    <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                                        <PenTool size={14} /> Signature Fields
+                                    </h3>
 
-                                    <div className="flex gap-2 mb-2">
+                                    <div className="flex gap-3 mb-3">
                                         <Button
                                             onClick={addField}
-                                            variant="secondary"
-                                            className="w-full justify-center"
+                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-5"
                                         >
-                                            <Plus size={16} className="mr-2" />
+                                            <Plus size={18} className="mr-2" />
                                             Add Box
                                         </Button>
                                         <Button
@@ -366,30 +372,32 @@ const ComposePage = () => {
                                             size="icon"
                                             disabled={fields.length === 0}
                                             title="Clear All"
-                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                            className="h-auto w-12 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={20} />
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-gray-400 italic flex items-center gap-1">
-                                        <AlertCircle size={10} />
+                                    <p className="text-xs text-[var(--template-text-light)] italic flex items-center gap-1.5 px-1">
+                                        <AlertCircle size={12} />
                                         Double-click a box to remove it.
                                     </p>
                                 </div>
 
-                                <div className="pt-6 border-t border-gray-100">
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Actions</h3>
-                                    <div className="flex flex-col gap-3">
+                                <div className="pt-8 border-t border-[var(--template-border)]">
+                                    <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                                        <Send size={14} /> Actions
+                                    </h3>
+                                    <div className="flex flex-col gap-4">
                                         {(!generatedLink || editingEnvelope) ? (
                                             <Button
                                                 onClick={handleSend}
                                                 disabled={fields.length === 0 || isSending}
                                                 isLoading={isSending}
-                                                className="w-full"
+                                                className="w-full bg-[var(--template-primary)] text-white hover:bg-[var(--template-primary-dark)] shadow-[var(--template-shadow-md)] hover:shadow-[var(--template-shadow-lg)] hover:-translate-y-0.5 transition-all py-6 rounded-xl text-base font-semibold"
                                             >
                                                 {isSending ? (editingEnvelope ? 'Saving...' : 'Sending...') : (
                                                     <>
-                                                        {editingEnvelope ? <CheckCircle size={16} className="mr-2" /> : <LinkIcon size={16} className="mr-2" />}
+                                                        {editingEnvelope ? <CheckCircle size={18} className="mr-2" /> : <LinkIcon size={18} className="mr-2" />}
                                                         {editingEnvelope ? 'Save Changes' : 'Generate Link'}
                                                     </>
                                                 )}
@@ -397,35 +405,35 @@ const ComposePage = () => {
                                         ) : null}
 
                                         {generatedLink && (
-                                            <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                                            <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
                                                 {!editingEnvelope && (
-                                                    <div className="bg-green-50 px-3 py-2 rounded-lg border border-green-100 text-green-700 text-sm flex items-center gap-2">
-                                                        <CheckCircle size={16} />
-                                                        Link Ready!
+                                                    <div className="bg-green-50 px-4 py-3 rounded-xl border border-green-100 text-green-700 text-sm flex items-center gap-2 shadow-sm">
+                                                        <CheckCircle size={18} className="shrink-0" />
+                                                        <span className="font-medium">Link Ready!</span>
                                                     </div>
                                                 )}
                                                 <div className="flex gap-2">
                                                     <Input
                                                         readOnly
                                                         value={generatedLink}
-                                                        className="text-xs h-9 bg-gray-50"
+                                                        className="text-xs h-10 bg-white border-[var(--template-border)] focus:border-[var(--template-primary)] text-[var(--template-text-secondary)]"
                                                     />
                                                     <Button
                                                         variant="secondary"
                                                         size="icon"
                                                         onClick={() => navigator.clipboard.writeText(generatedLink)}
                                                         title="Copy Link"
-                                                        className="h-9 w-9 shrink-0"
+                                                        className="h-10 w-10 shrink-0 bg-white border border-[var(--template-border)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)]"
                                                     >
-                                                        <Copy size={14} />
+                                                        <Copy size={16} />
                                                     </Button>
                                                 </div>
                                                 <Button
                                                     onClick={() => setIsEmailModalOpen(true)}
-                                                    className="w-full bg-primary hover:bg-primary/90"
+                                                    className="w-full bg-[var(--template-primary)] text-white hover:bg-[var(--template-primary-dark)] shadow-[var(--template-shadow-sm)] py-5 rounded-xl font-medium"
                                                 >
                                                     <Send size={16} className="mr-2" />
-                                                    Send Email
+                                                    Send via Email
                                                 </Button>
                                             </div>
                                         )}

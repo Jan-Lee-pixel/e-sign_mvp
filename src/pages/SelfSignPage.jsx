@@ -142,22 +142,23 @@ function SelfSignPage({ session }) {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50 font-sans">
+        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)]">
             {/* Header */}
-            <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-50 shrink-0">
-                <div className="flex items-center gap-4">
+            <header className="h-20 bg-[rgba(253,252,248,0.95)] backdrop-blur-xl border-b border-[var(--template-border)] flex items-center justify-between px-8 shadow-sm z-50 shrink-0 animate-[slideDown_0.5s_ease-out]">
+                <div className="flex items-center gap-6">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => navigate('/dashboard')}
                         title="Back to Dashboard"
-                        className="text-gray-500 hover:text-gray-900"
+                        className="text-[var(--template-text-secondary)] hover:text-[var(--template-primary)] hover:bg-transparent transition-colors"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={24} />
                     </Button>
+                    <div className="h-8 w-[1px] bg-[var(--template-border)]"></div>
                     <div>
-                        <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900">
-                            <PenTool className="w-5 h-5 text-primary" />
+                        <h1 className="text-xl font-bold flex items-center gap-2 font-['Crimson_Pro'] text-[var(--template-primary)]">
+                            <PenTool className="w-5 h-5" />
                             <span>Self-Sign Mode</span>
                         </h1>
                     </div>
@@ -165,17 +166,17 @@ function SelfSignPage({ session }) {
 
                 <div className="flex items-center gap-4">
                     {session?.user?.email && (
-                        <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-[var(--template-bg-secondary)] rounded-xl border border-[var(--template-border)] shadow-sm">
+                            <div className="w-6 h-6 rounded-full bg-[var(--template-primary)]/10 flex items-center justify-center text-[var(--template-primary)] text-xs font-bold">
                                 {session.user.email[0].toUpperCase()}
                             </div>
-                            <span className="text-sm text-gray-600">{session.user.email}</span>
+                            <span className="text-sm font-medium text-[var(--template-text-secondary)]">{session.user.email}</span>
                         </div>
                     )}
                     <Button
                         variant="secondary"
                         onClick={handleSignOut}
-                        className="text-gray-600"
+                        className="text-[var(--template-text-secondary)] hover:text-[var(--template-primary)] bg-white border border-[var(--template-border)] hover:bg-[var(--template-bg-secondary)]"
                     >
                         <LogOut size={16} className="mr-2" />
                         Sign Out
@@ -185,21 +186,21 @@ function SelfSignPage({ session }) {
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-80 bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-40">
-                    <div className="p-6 border-b border-gray-100">
-                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Document Tools</h2>
-                        <p className="text-xs text-gray-500 mt-1">Manage your document and signatures.</p>
+                <aside className="w-80 bg-white/60 backdrop-blur-md border-r border-[var(--template-border)] flex flex-col shrink-0 relative z-40 shadow-[var(--template-shadow-sm)]">
+                    <div className="p-6 border-b border-[var(--template-border)]">
+                        <h2 className="text-xs font-bold text-[var(--template-primary)] uppercase tracking-widest font-['Crimson_Pro']">Document Tools</h2>
+                        <p className="text-xs text-[var(--template-text-light)] mt-2">Manage your document and signatures.</p>
                     </div>
 
                     <div className="p-6 flex flex-col gap-6 overflow-y-auto flex-1">
                         {!pdfFile ? (
-                            <div className="text-center">
-                                <div className="p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-4">
-                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <UploadCloud size={24} />
+                            <div className="text-center animate-[fadeIn_0.5s_ease-out]">
+                                <div className="p-8 border-2 border-dashed border-[var(--template-border)] rounded-2xl bg-[var(--template-bg-secondary)] mb-6 hover:border-[var(--template-primary)] transition-colors group">
+                                    <div className="w-14 h-14 bg-[var(--template-primary)]/10 text-[var(--template-primary)] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                        <UploadCloud size={28} />
                                     </div>
-                                    <h3 className="text-sm font-medium text-gray-900 mb-1">Upload Document</h3>
-                                    <p className="text-xs text-gray-500 mb-4">Select a PDF file to begin signing.</p>
+                                    <h3 className="text-base font-semibold text-[var(--template-text-primary)] mb-1">Upload Document</h3>
+                                    <p className="text-sm text-[var(--template-text-light)] mb-6">Select a PDF file to begin signing.</p>
                                     <PDFUploader
                                         onUpload={handleUpload}
                                         onError={(msg) => setAlertModal({ isOpen: true, title: "Upload Error", message: msg, type: "error" })}
@@ -207,43 +208,47 @@ function SelfSignPage({ session }) {
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-6">
+                            <div className="space-y-8 animate-[slideRight_0.5s_ease-out]">
                                 <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Signatures</h3>
+                                    <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                                        <PenTool size={14} /> Signatures
+                                    </h3>
                                     <div className="flex gap-2 mb-4">
                                         <Button
                                             onClick={() => setIsSignatureModalOpen(true)}
-                                            className="w-full justify-center"
+                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-5"
                                         >
-                                            <PenTool size={16} className="mr-2" />
+                                            <PenTool size={18} className="mr-2" />
                                             Add Signature
                                         </Button>
                                     </div>
 
                                     {signatures.length > 0 && (
-                                        <div className="p-3 bg-green-50 border border-green-100 rounded-lg flex items-center justify-between group">
+                                        <div className="p-4 bg-green-50/50 border border-green-100 rounded-xl flex items-center justify-between group shadow-sm transition-all hover:shadow-md">
                                             <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
-                                                <CheckCircle size={16} />
+                                                <CheckCircle size={18} />
                                                 <span>{signatures.length} signature{signatures.length !== 1 ? 's' : ''} added</span>
                                             </div>
                                             <button
                                                 onClick={clearSignatures}
-                                                className="text-green-600 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
+                                                className="text-green-600 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
                                                 title="Clear all signatures"
                                             >
-                                                <Trash2 size={14} />
+                                                <Trash2 size={16} />
                                             </button>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="pt-6 border-t border-gray-100">
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Actions</h3>
+                                <div className="pt-8 border-t border-[var(--template-border)]">
+                                    <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
+                                        <Download size={14} /> Actions
+                                    </h3>
                                     <Button
                                         onClick={handleDownload}
                                         disabled={isProcessing || signatures.length === 0}
                                         isLoading={isProcessing}
-                                        className="w-full bg-green-600 hover:bg-green-700 ring-green-600"
+                                        className="w-full bg-[var(--template-success)] hover:bg-[#27ae60] text-white shadow-[var(--template-shadow-md)] hover:shadow-[var(--template-shadow-lg)] hover:-translate-y-0.5 transition-all py-6 rounded-xl text-base font-semibold"
                                     >
                                         {isProcessing ? "Saving..." : "Download Signed PDF"}
                                         {!isProcessing && <Download size={18} className="ml-2" />}
