@@ -7,12 +7,14 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import StatsGrid from '../components/StatsGrid';
 import DocumentList from '../components/DocumentList';
+import TutorialModal from '../components/TutorialModal';
 
 const DashboardPage = ({ session }) => {
     const navigate = useNavigate();
     const [envelopes, setEnvelopes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isPro, setIsPro] = useState(false);
+    const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
     // Modals
     const [promptModal, setPromptModal] = useState({ isOpen: false, title: "", message: "", defaultValue: "", onConfirm: () => { } });
@@ -176,7 +178,7 @@ const DashboardPage = ({ session }) => {
 
     return (
         <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] leading-relaxed overflow-x-hidden">
-            <Header userEmail={session?.user?.email} onSignOut={handleSignOut} isPro={isPro} />
+            <Header userEmail={session?.user?.email} onSignOut={handleSignOut} isPro={isPro} onGetStarted={() => setIsTutorialOpen(true)} />
 
             <div className="max-w-[1400px] mx-auto py-12 px-8 animate-[fadeIn_0.8s_ease-out_0.2s_backwards]">
                 <div className="grid grid-cols-[280px_1fr] gap-8 mt-8 max-lg:grid-cols-1">
@@ -207,6 +209,11 @@ const DashboardPage = ({ session }) => {
                     </main>
                 </div>
             </div>
+
+            <TutorialModal
+                isOpen={isTutorialOpen}
+                onClose={() => setIsTutorialOpen(false)}
+            />
 
             <PromptModal
                 isOpen={promptModal.isOpen}
