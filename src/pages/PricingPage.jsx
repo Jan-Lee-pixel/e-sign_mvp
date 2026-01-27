@@ -31,8 +31,6 @@ export default function PricingPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    amount: 2000,
-                    currency: 'usd',
                     userId: session.user.id
                 }),
             });

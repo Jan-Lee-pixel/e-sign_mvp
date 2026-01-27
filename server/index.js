@@ -111,7 +111,12 @@ app.post('/verify-payment', async (req, res) => {
 app.post('/create-payment-intent', async (req, res) => {
     try {
         const stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
-        const { amount, currency = 'usd', userId } = req.body;
+        const { userId } = req.body;
+
+        // SECURITY: Hardcode amount to $20.00 (2000 cents)
+        // Do NOT trust the client to send the amount.
+        const amount = 2000;
+        const currency = 'usd';
 
         if (!userId) {
             return res.status(400).json({ error: 'Missing userId' });
