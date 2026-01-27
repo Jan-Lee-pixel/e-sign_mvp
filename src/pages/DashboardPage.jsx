@@ -10,6 +10,7 @@ const DashboardPage = ({ session }) => {
     const navigate = useNavigate();
     const [envelopes, setEnvelopes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isPro, setIsPro] = useState(false);
 
     // Modals
     const [promptModal, setPromptModal] = useState({ isOpen: false, title: "", message: "", defaultValue: "", onConfirm: () => { } });
@@ -17,8 +18,58 @@ const DashboardPage = ({ session }) => {
 
     useEffect(() => {
         if (!session) return;
+
+        fetchProfile();
+
+        // Check for payment success in URL
+        const query = new URLSearchParams(window.location.search);
+        const paymentSuccess = query.get('payment_success');
+        const paymentIntent = query.get('payment_intent');
+
+        if (paymentSuccess && paymentIntent) {
+            verifyPayment(paymentIntent);
+        }
+
         fetchEnvelopes();
     }, [session]);
+
+    const fetchProfile = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('subscription_status')
+                .eq('id', session.user.id)
+                .single();
+
+            if (data && data.subscription_status === 'pro') {
+                setIsPro(true);
+            }
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+        }
+    };
+
+    const verifyPayment = async (paymentIntentId) => {
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:4242/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentIntentId }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setAlertModal({ isOpen: true, title: "Success!", message: "Your subscription has been activated.", type: "success" });
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } catch (error) {
+            console.error("Payment verification failed:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchEnvelopes = async () => {
         try {
@@ -118,6 +169,11 @@ const DashboardPage = ({ session }) => {
                             <span className="font-bold text-xl tracking-tight text-gray-900">E-Sign</span>
                         </div>
                         <div className="flex items-center gap-4">
+                            {isPro && (
+                                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                                    PRO
+                                </span>
+                            )}
                             <span className="text-sm text-gray-500 hidden sm:block">{session?.user?.email}</span>
                             <Button
                                 variant="ghost"

@@ -6,6 +6,7 @@ import SelfSignPage from './pages/SelfSignPage';
 import ComposePage from './pages/ComposePage';
 import RecipientSignPage from './pages/RecipientSignPage';
 import DashboardPage from './pages/DashboardPage';
+import PricingPage from './pages/PricingPage';
 import './App.css';
 
 function App() {
@@ -54,6 +55,9 @@ function App() {
                 } />
                 <Route path="/compose" element={
                     !session ? <Navigate to="/login" /> : <ComposePage />
+                } />
+                <Route path="/pricing" element={
+                    !session ? <Navigate to="/login" /> : <PricingPage />
                 } />
 
                 {/* Fallback */}
