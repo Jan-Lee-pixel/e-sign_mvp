@@ -20,3 +20,5 @@ async function resetSubscription() {
 }
 
 resetSubscription();
+
+//node --env-file=.env reset_subscription.js
