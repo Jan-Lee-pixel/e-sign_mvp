@@ -169,10 +169,18 @@ const DashboardPage = ({ session }) => {
                             <span className="font-bold text-xl tracking-tight text-gray-900">E-Sign</span>
                         </div>
                         <div className="flex items-center gap-4">
-                            {isPro && (
+                            {isPro ? (
                                 <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                                     PRO
                                 </span>
+                            ) : (
+                                <Button
+                                    size="sm"
+                                    onClick={() => navigate('/pricing')}
+                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:to-indigo-700"
+                                >
+                                    Upgrade Plan
+                                </Button>
                             )}
                             <span className="text-sm text-gray-500 hidden sm:block">{session?.user?.email}</span>
                             <Button

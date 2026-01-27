@@ -88,11 +88,12 @@ app.post('/verify-payment', async (req, res) => {
 
                 const { error } = await supabase
                     .from('profiles')
-                    .update({
+                    .upsert({
+                        id: userId,
+                        email: paymentIntent.receipt_email || undefined, // Optional
                         subscription_status: 'pro',
                         updated_at: new Date().toISOString()
-                    })
-                    .eq('id', userId);
+                    });
 
                 if (error) throw error;
 
