@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, CheckCircle, PenTool, LogOut, Download, Plus, Pencil, MoreVertical } from 'lucide-react';
 import PromptModal from '../components/PromptModal';
 import AlertModal from '../components/AlertModal';
-import { Button } from '../components/ui/Button';
+import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
+import StatsGrid from '../components/StatsGrid';
+import DocumentList from '../components/DocumentList';
 
 const DashboardPage = ({ session }) => {
     const navigate = useNavigate();
@@ -31,6 +33,7 @@ const DashboardPage = ({ session }) => {
         }
 
         fetchEnvelopes();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [session]);
 
     const fetchProfile = async () => {
@@ -44,8 +47,8 @@ const DashboardPage = ({ session }) => {
             if (data && data.subscription_status === 'pro') {
                 setIsPro(true);
             }
-        } catch (error) {
-            console.error("Error fetching profile:", error);
+        } catch (err) {
+            console.error("Error fetching profile:", err);
         }
     };
 
@@ -156,187 +159,52 @@ const DashboardPage = ({ session }) => {
         });
     };
 
+    const [activeTab, setActiveTab] = useState('dashboard');
+
+    const filteredEnvelopes = envelopes.filter(env => {
+        if (activeTab === 'all') return true;
+        if (activeTab === 'pending') return env.status === 'pending';
+        if (activeTab === 'signed') return ['signed', 'completed'].includes(env.status);
+        return true; // dashboard shows all for now, or could limit
+    });
+
+    const stats = {
+        total: envelopes.length,
+        pending: envelopes.filter(e => e.status === 'pending').length,
+        signed: envelopes.filter(e => ['signed', 'completed'].includes(e.status)).length
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-            {/* Navbar */}
-            <nav className="sticky top-0 z-30 w-full bg-white border-b border-gray-200 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-primary p-1.5 rounded-lg text-primary-foreground">
-                                <PenTool size={20} />
+        <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] leading-relaxed overflow-x-hidden">
+            <Header userEmail={session?.user?.email} onSignOut={handleSignOut} isPro={isPro} />
+
+            <div className="max-w-[1400px] mx-auto py-12 px-8 animate-[fadeIn_0.8s_ease-out_0.2s_backwards]">
+                <div className="grid grid-cols-[280px_1fr] gap-8 mt-8 max-lg:grid-cols-1">
+                    <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+
+                    <main className="animate-[slideLeft_0.6s_ease-out_0.4s_backwards]">
+                        <div className="flex justify-between items-center mb-8 max-md:flex-col max-md:items-start max-md:gap-4">
+                            <div>
+                                <h1 className="font-['Crimson_Pro'] text-4xl font-semibold text-[var(--template-text-primary)]">Dashboard</h1>
                             </div>
-                            <span className="font-bold text-xl tracking-tight text-gray-900">E-Sign</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            {isPro ? (
-                                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                                    PRO
-                                </span>
-                            ) : (
-                                <Button
-                                    size="sm"
-                                    onClick={() => navigate('/pricing')}
-                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:to-indigo-700"
-                                >
-                                    Upgrade Plan
-                                </Button>
-                            )}
-                            <span className="text-sm text-gray-500 hidden sm:block">{session?.user?.email}</span>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleSignOut}
-                                className="text-gray-600 hover:text-red-600 hover:bg-red-50"
+                            <button
+                                onClick={() => navigate('/compose')}
+                                className="bg-gradient-to-br from-[var(--template-accent)] to-[#D69520] text-white px-8 py-4 border-none rounded-xl font-semibold cursor-pointer text-base shadow-[var(--template-shadow-md)] transition-all flex items-center gap-2 hover:-translate-y-1 hover:shadow-[var(--template-shadow-lg)]"
                             >
-                                <LogOut size={16} className="mr-2" />
-                                Sign Out
-                            </Button>
+                                <span className="text-xl">+</span> Upload Document
+                            </button>
                         </div>
-                    </div>
-                </div>
-            </nav>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Page Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-                        <p className="text-gray-500 mt-1">Manage and track your signature requests.</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button
-                            variant="secondary"
-                            onClick={() => navigate('/self-sign')}
-                        >
-                            <PenTool size={16} className="mr-2" />
-                            Sign Yourself
-                        </Button>
-                        <Button
-                            onClick={() => navigate('/compose')}
-                            className="shadow-lg shadow-primary/20"
-                        >
-                            <Plus size={16} className="mr-2" />
-                            New Envelope
-                        </Button>
-                    </div>
-                </div>
+                        <StatsGrid total={stats.total} pending={stats.pending} signed={stats.signed} />
 
-                {/* Content */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    {/* Header Row */}
-                    <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        <div className="col-span-12 sm:col-span-5">Document Name</div>
-                        <div className="col-span-6 sm:col-span-3">Status</div>
-                        <div className="col-span-6 sm:col-span-3">Date Sent</div>
-                        <div className="col-span-12 sm:col-span-1 text-right hidden sm:block">Actions</div>
-                    </div>
-
-                    {/* List */}
-                    <div className="divide-y divide-gray-100">
-                        {loading ? (
-                            <div className="flex justify-center items-center py-20 text-gray-400">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                            </div>
-                        ) : envelopes.length === 0 ? (
-                            <div className="flex flex-col justify-center items-center py-20 text-gray-400 gap-3">
-                                <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center">
-                                    <FileText size={32} className="opacity-20" />
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-lg font-medium text-gray-900">No documents yet</p>
-                                    <p className="text-sm">Create your first envelope to get started.</p>
-                                </div>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => navigate('/compose')}
-                                    className="mt-2"
-                                >
-                                    Create Envelope
-                                </Button>
-                            </div>
-                        ) : (
-                            envelopes.map(env => (
-                                <div
-                                    key={env.id}
-                                    onClick={() => handleRowClick(env)}
-                                    className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors cursor-pointer group"
-                                >
-                                    <div className="col-span-12 sm:col-span-5 flex items-center gap-4">
-                                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${env.status === 'signed' ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
-                                            }`}>
-                                            <FileText size={20} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="text-sm font-semibold text-gray-900 truncate" title={env.name}>
-                                                {env.name || `Envelope #${env.id.slice(0, 8)}`}
-                                            </div>
-                                            <div className="text-xs text-gray-500 truncate font-mono mt-0.5">
-                                                ID: {env.id.slice(0, 8)}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-span-6 sm:col-span-3 flex items-center">
-                                        {['signed', 'completed'].includes(env.status) ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                                                <CheckCircle size={12} />
-                                                Signed
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                                <Clock size={12} />
-                                                Pending
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="col-span-6 sm:col-span-3 text-sm text-gray-500">
-                                        {new Date(env.created_at).toLocaleDateString(undefined, {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric'
-                                        })}
-                                        <div className="text-xs text-gray-400">
-                                            {new Date(env.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </div>
-                                    </div>
-
-                                    <div className="col-span-12 sm:col-span-1 flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                                        <div className="flex items-center gap-1">
-                                            {['signed', 'completed'].includes(env.status) && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        downloadSignedPdf(env.signed_pdf_url || env.pdf_url, env.original_pdf_url);
-                                                    }}
-                                                    title="Download"
-                                                    className="h-8 w-8 text-gray-500 hover:text-primary"
-                                                >
-                                                    <Download size={16} />
-                                                </Button>
-                                            )}
-
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleRenameClick(env);
-                                                }}
-                                                title="Rename"
-                                                className="h-8 w-8 text-gray-500 hover:text-gray-900"
-                                            >
-                                                <Pencil size={16} />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                        <DocumentList
+                            envelopes={filteredEnvelopes}
+                            loading={loading}
+                            onRowClick={handleRowClick}
+                            onDownload={downloadSignedPdf}
+                            onRename={handleRenameClick}
+                        />
+                    </main>
                 </div>
             </div>
 

@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignFlow - Professional E-Signature Platform</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=DM+Sans:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2C5F2D;
+            --primary-light: #4A8F4D;
+            --primary-dark: #1A3F1B;
+            --accent: #E8A838;
+            --bg-main: #FDFCF8;
+            --bg-secondary: #F5F3ED;
+            --text-primary: #1A1A1A;
+            --text-secondary: #6B6B6B;
+            --text-light: #A0A0A0;
+            --border: #E5E3DC;
+            --success: #4A8F4D;
+            --warning: #E8A838;
+            --shadow-sm: 0 2px 8px rgba(44, 95, 45, 0.06);
+            --shadow-md: 0 4px 24px rgba(44, 95, 45, 0.08);
+            --shadow-lg: 0 8px 40px rgba(44, 95, 45, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: rgba(253, 252, 248, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: '✍';
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            height: fit-content;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            animation: slideRight 0.6s ease-out 0.3s backwards;
+        }
+
+        @keyframes slideRight {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-secondary);
+            color: var(--primary);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sidebar-item .icon {
+            font-size: 1.25rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            animation: slideLeft 0.6s ease-out 0.4s backwards;
+        }
+
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-section h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, var(--accent) 0%, #D69520 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Documents Section */
+        .documents-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-secondary);
+        }
+
+        .section-header h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1.25rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .filter-tab:hover {
+            background: var(--bg-secondary);
+            color: var(--primary);
+        }
+
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Document List */
+        .document-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .document-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .document-item:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border);
+            transform: translateX(5px);
+        }
+
+        .doc-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .doc-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .doc-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .doc-meta {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .doc-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #FFF4E6;
+            color: #E8A838;
+        }
+
+        .status-signed {
+            background: #E8F5E9;
+            color: #4A8F4D;
+        }
+
+        .status-expired {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .doc-date {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        /* Upload Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeInModal 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            animation: scaleIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .upload-area {
+            border: 3px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+            background: var(--bg-secondary);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(44, 95, 45, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(44, 95, 45, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .header-section {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .document-item {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .filter-tabs {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Signature Canvas Styles */
+        .signature-pad {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: crosshair;
+            touch-action: none;
+            background: white;
+        }
+
+        .signature-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">SignFlow</div>
+            <div class="nav-links">
+                <a href="#dashboard">Dashboard</a>
+                <a href="#documents">Documents</a>
+                <a href="#templates">Templates</a>
+                <a href="#team">Team</a>
+                <button class="btn-primary">Get Started</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="dashboard">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Navigation</h3>
+                    <div class="sidebar-item active">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="icon">📄</span>
+                        <span>All Documents</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="icon">✍️</span>
+                        <span>Pending Signature</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="icon">✓</span>
+                        <span>Completed</span>
+                    </div>
+                </div>
+                <div class="sidebar-section">
+                    <h3>Tools</h3>
+                    <div class="sidebar-item">
+                        <span class="icon">📋</span>
+                        <span>Templates</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="icon">👥</span>
+                        <span>Team</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="icon">⚙️</span>
+                        <span>Settings</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="header-section">
+                    <h1>Welcome back, User</h1>
+                    <button class="btn-upload" onclick="openModal()">
+                        <span>📤</span>
+                        Upload Document
+                    </button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Documents</div>
+                        <div class="stat-value">156</div>
+                        <div class="stat-change">↑ 12% this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pending Signatures</div>
+                        <div class="stat-value">23</div>
+                        <div class="stat-change">↓ 8% from last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-value">133</div>
+                        <div class="stat-change">↑ 18% this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value">98%</div>
+                        <div class="stat-change">↑ 2% improvement</div>
+                    </div>
+                </div>
+
+                <!-- Documents Section -->
+                <div class="documents-section">
+                    <div class="section-header">
+                        <h2>Recent Documents</h2>
+                        <div class="filter-tabs">
+                            <button class="filter-tab active">All</button>
+                            <button class="filter-tab">Pending</button>
+                            <button class="filter-tab">Signed</button>
+                        </div>
+                    </div>
+
+                    <div class="document-list">
+                        <div class="document-item">
+                            <div class="doc-icon">📝</div>
+                            <div class="doc-info">
+                                <div class="doc-name">Employment Contract - Sarah Johnson</div>
+                                <div class="doc-meta">Added by John Smith • 2.4 MB</div>
+                            </div>
+                            <div class="doc-status status-pending">Pending</div>
+                            <div class="doc-date">Jan 25, 2026</div>
+                            <div class="doc-actions">
+                                <button class="action-btn" title="View">👁️</button>
+                                <button class="action-btn" title="Download">⬇️</button>
+                                <button class="action-btn" title="Share">🔗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-item">
+                            <div class="doc-icon">📋</div>
+                            <div class="doc-info">
+                                <div class="doc-name">NDA Agreement - Tech Corp Ltd</div>
+                                <div class="doc-meta">Added by you • 1.8 MB</div>
+                            </div>
+                            <div class="doc-status status-signed">Signed</div>
+                            <div class="doc-date">Jan 24, 2026</div>
+                            <div class="doc-actions">
+                                <button class="action-btn" title="View">👁️</button>
+                                <button class="action-btn" title="Download">⬇️</button>
+                                <button class="action-btn" title="Share">🔗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-item">
+                            <div class="doc-icon">💼</div>
+                            <div class="doc-info">
+                                <div class="doc-name">Partnership Agreement - Acme Inc</div>
+                                <div class="doc-meta">Added by Michael Brown • 3.2 MB</div>
+                            </div>
+                            <div class="doc-status status-pending">Pending</div>
+                            <div class="doc-date">Jan 23, 2026</div>
+                            <div class="doc-actions">
+                                <button class="action-btn" title="View">👁️</button>
+                                <button class="action-btn" title="Download">⬇️</button>
+                                <button class="action-btn" title="Share">🔗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-item">
+                            <div class="doc-icon">🏠</div>
+                            <div class="doc-info">
+                                <div class="doc-name">Lease Agreement - Downtown Office</div>
+                                <div class="doc-meta">Added by you • 2.1 MB</div>
+                            </div>
+                            <div class="doc-status status-signed">Signed</div>
+                            <div class="doc-date">Jan 22, 2026</div>
+                            <div class="doc-actions">
+                                <button class="action-btn" title="View">👁️</button>
+                                <button class="action-btn" title="Download">⬇️</button>
+                                <button class="action-btn" title="Share">🔗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-item">
+                            <div class="doc-icon">📄</div>
+                            <div class="doc-info">
+                                <div class="doc-name">Service Agreement - Marketing Agency</div>
+                                <div class="doc-meta">Added by Emma Davis • 1.5 MB</div>
+                            </div>
+                            <div class="doc-status status-expired">Expired</div>
+                            <div class="doc-date">Jan 15, 2026</div>
+                            <div class="doc-actions">
+                                <button class="action-btn" title="View">👁️</button>
+                                <button class="action-btn" title="Download">⬇️</button>
+                                <button class="action-btn" title="Share">🔗</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <h2>Upload Document</h2>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drag and drop your document here</div>
+                <div class="upload-subtext">or click to browse (PDF, DOC, DOCX up to 10MB)</div>
+            </div>
+
+            <form>
+                <div class="form-group">
+                    <label>Document Title</label>
+                    <input type="text" placeholder="Enter document title" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Recipients (email addresses)</label>
+                    <input type="email" placeholder="name@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Message (optional)</label>
+                    <textarea rows="3" placeholder="Add a message for recipients..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">Send for Signature</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal functions
+        function openModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('uploadModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.doc,.docx';
+            input.onchange = (e) => {
+                handleFiles(e.target.files);
+            };
+            input.click();
+        });
+
+        function handleFiles(files) {
+            const file = files[0];
+            uploadArea.querySelector('.upload-text').textContent = `Selected: ${file.name}`;
+            uploadArea.querySelector('.upload-icon').textContent = '✓';
+            uploadArea.style.borderColor = 'var(--success)';
+        }
+
+        // Filter tabs functionality
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function () {
+                filterTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Sidebar navigation
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', function () {
+                sidebarItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

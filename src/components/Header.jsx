@@ -1,0 +1,52 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const Header = ({ userEmail, onSignOut, isPro }) => {
+    const navigate = useNavigate();
+
+    return (
+        <header className="bg-[rgba(253,252,248,0.95)] backdrop-blur-2xl border-b border-[var(--template-border)] sticky top-0 z-[1000] animate-[slideDown_0.6s_ease-out]">
+            <nav className="max-w-[1400px] mx-auto py-6 px-8 flex justify-between items-center">
+                <div className="font-['Crimson_Pro'] text-3xl font-semibold text-[var(--template-primary)] flex items-center gap-2 before:content-['✍'] before:text-3xl before:animate-[float_3s_ease-in-out_infinite]">
+                    SignFlow
+                </div>
+                <div className="flex gap-8 items-center max-md:hidden">
+                    <a href="#dashboard" className="text-[var(--template-text-secondary)] hover:text-[var(--template-primary)] font-medium transition-colors relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[var(--template-primary)] after:transition-all hover:after:w-full">Dashboard</a>
+                    <div className="text-[var(--template-text-secondary)] font-medium">{userEmail}</div>
+
+                    {isPro ? (
+                        <span className="bg-gradient-to-r from-[var(--template-warning)] to-[#D69520] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-[var(--template-shadow-sm)]">
+                            PRO
+                        </span>
+                    ) : (
+                        <button
+                            onClick={() => navigate('/pricing')}
+                            className="text-[var(--template-primary)] border border-[var(--template-primary)] px-4 py-2 rounded-lg font-semibold hover:bg-[var(--template-primary)] hover:text-white transition-all text-sm"
+                        >
+                            Upgrade
+                        </button>
+                    )}
+
+                    <button
+                        onClick={onSignOut}
+                        className="text-[var(--template-text-secondary)] hover:text-[var(--template-primary)] font-medium transition-colors cursor-pointer"
+                    >
+                        Sign Out
+                    </button>
+                    <button
+                        onClick={() => navigate('/compose')}
+                        className="bg-[var(--template-primary)] text-white px-7 py-3 rounded-lg font-semibold shadow-[var(--template-shadow-sm)] hover:bg-[var(--template-primary-dark)] hover:-translate-y-0.5 hover:shadow-[var(--template-shadow-md)] transition-all"
+                    >
+                        New Envelope
+                    </button>
+                </div>
+                {/* Mobile menu placeholder */}
+                <div className="hidden max-md:block">
+                    <button className="text-2xl">☰</button>
+                </div>
+            </nav>
+        </header>
+    );
+};
+
+export default Header;

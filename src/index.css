@@ -57,6 +57,23 @@
     --ring: 160 84% 39%;
 
     --radius: 0.5rem;
+
+    /* Custom Variables from Template */
+    --template-primary: #2C5F2D;
+    --template-primary-light: #4A8F4D;
+    --template-primary-dark: #1A3F1B;
+    --template-accent: #E8A838;
+    --template-bg-main: #FDFCF8;
+    --template-bg-secondary: #F5F3ED;
+    --template-text-primary: #1A1A1A;
+    --template-text-secondary: #6B6B6B;
+    --template-text-light: #A0A0A0;
+    --template-border: #E5E3DC;
+    --template-success: #4A8F4D;
+    --template-warning: #E8A838;
+    --template-shadow-sm: 0 2px 8px rgba(44, 95, 45, 0.06);
+    --template-shadow-md: 0 4px 24px rgba(44, 95, 45, 0.08);
+    --template-shadow-lg: 0 8px 40px rgba(44, 95, 45, 0.12);
   }
 
   .dark {
@@ -88,6 +105,31 @@
     --input: 160 20% 15%;
     --ring: 160 60% 45%;
   }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 @layer base {
