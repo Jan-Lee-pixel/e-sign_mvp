@@ -218,17 +218,33 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 gap-3">
-                                    {savedSignatures.map((sig) => (
-                                        <div key={sig.id} className="group relative border border-gray-200 rounded-lg p-2 hover:border-primary hover:shadow-sm transition-all cursor-pointer bg-white" onClick={() => handleSelectSaved(sig.signature_url)}>
-                                            <img src={sig.signature_url} alt="Saved Signature" className="h-16 w-full object-contain" />
-                                            <button
-                                                onClick={(e) => handleDeleteSaved(sig.id, e)}
-                                                className="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                <div className="space-y-6">
+                                    {Object.entries(
+                                        savedSignatures.reduce((acc, sig) => {
+                                            const cat = sig.category || 'General';
+                                            if (!acc[cat]) acc[cat] = [];
+                                            acc[cat].push(sig);
+                                            return acc;
+                                        }, {})
+                                    ).map(([category, signatures]) => (
+                                        <div key={category}>
+                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 pl-1">
+                                                {category}
+                                            </h4>
+                                            <div className="grid grid-cols-1 gap-3">
+                                                {signatures.map((sig) => (
+                                                    <div key={sig.id} className="group relative border border-gray-200 rounded-lg p-2 hover:border-primary hover:shadow-sm transition-all cursor-pointer bg-white" onClick={() => handleSelectSaved(sig.signature_url)}>
+                                                        <img src={sig.signature_url} alt="Saved Signature" className="h-16 w-full object-contain" />
+                                                        <button
+                                                            onClick={(e) => handleDeleteSaved(sig.id, e)}
+                                                            className="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
