@@ -170,10 +170,14 @@ const DashboardPage = ({ session }) => {
         return true; // dashboard shows all for now, or could limit
     });
 
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
     const stats = {
         total: envelopes.length,
         pending: envelopes.filter(e => e.status === 'pending').length,
-        signed: envelopes.filter(e => ['signed', 'completed'].includes(e.status)).length
+        signed: envelopes.filter(e => ['signed', 'completed'].includes(e.status)).length,
+        recent: envelopes.filter(e => new Date(e.created_at) > oneWeekAgo).length
     };
 
     return (
@@ -197,7 +201,7 @@ const DashboardPage = ({ session }) => {
                             </button>
                         </div>
 
-                        <StatsGrid total={stats.total} pending={stats.pending} signed={stats.signed} />
+                        <StatsGrid stats={stats} />
 
                         <DocumentList
                             envelopes={filteredEnvelopes}
