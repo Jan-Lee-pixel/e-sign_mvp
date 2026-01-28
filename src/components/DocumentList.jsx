@@ -5,7 +5,7 @@ const DocumentList = ({ envelopes, loading, onRowClick, onDownload, onRename }) 
     return (
         <div className="bg-white rounded-2xl p-8 shadow-[var(--template-shadow-sm)] border border-[var(--template-border)]">
             <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-[var(--template-bg-secondary)]">
-                <h2 className="font-['Crimson_Pro'] text-3xl font-semibold">Recent Documents</h2>
+                <h2 className="font-['Calistoga'] text-3xl font-bold tracking-wide">Recent Documents</h2>
                 <div className="flex gap-2">
                     {/* Filter tabs could go here, or handled by parent */}
                 </div>

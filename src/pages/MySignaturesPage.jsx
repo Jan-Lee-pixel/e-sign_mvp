@@ -140,70 +140,79 @@ const MySignaturesPage = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-[#FDFDFD] font-sans text-[#1A1A1A]">
-            <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-            <main className="flex-1 flex flex-col transition-all duration-300 ease-in-out ml-0 lg:ml-0">
-                <Header title="My Signatures" />
+        <div className="min-h-screen bg-[#FDFDFD] font-sans text-[#1A1A1A] leading-relaxed overflow-x-hidden">
+            <Header title="My Signatures" />
 
-                <div className="p-8 lg:p-12 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
-                    <div className="flex justify-between items-center mb-10">
-                        <h1 className="text-3xl font-bold font-['Calistoga'] tracking-wide">My Signatures</h1>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => { setEditingCategory(null); setShowCategoryModal(true); }}
-                                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-5 py-3 rounded-xl font-medium shadow-sm transition-all flex items-center gap-2"
-                            >
-                                <Plus size={20} />
-                                Add Category
-                            </button>
-                            <button
-                                onClick={() => setShowSignaturePad(true)}
-                                className="bg-[#F9A602] hover:bg-[#e09602] text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-                            >
-                                <Plus size={20} />
-                                Create New Signature
-                            </button>
+            <div className="max-w-[1400px] mx-auto py-12 px-8 animate-[fadeIn_0.8s_ease-out_0.2s_backwards]">
+                <div className="grid grid-cols-[280px_1fr] gap-8 mt-8 max-lg:grid-cols-1">
+                    <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+
+                    <main className="animate-[slideLeft_0.6s_ease-out_0.4s_backwards]">
+                        <div className="flex justify-between items-center mb-10 max-md:flex-col max-md:items-start max-md:gap-4">
+                            <h1 className="text-3xl font-bold font-['Calistoga'] tracking-wide">My Signatures</h1>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => { setEditingCategory(null); setShowCategoryModal(true); }}
+                                    className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-5 py-3 rounded-xl font-medium shadow-sm transition-all flex items-center gap-2"
+                                >
+                                    <Plus size={20} />
+                                    Add Category
+                                </button>
+                                <button
+                                    onClick={() => setShowSignaturePad(true)}
+                                    className="bg-[#F9A602] hover:bg-[#e09602] text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                                >
+                                    <Plus size={20} />
+                                    Create New Signature
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {categories.map((cat, idx) => {
-                            const isCustom = cat.id && cat.id.length > 30;
-                            const catName = cat.name;
-                            const catSignatures = getSignaturesByCategory(cat.name);
+                        {loading ? (
+                            <div className="flex justify-center items-center py-20">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-[fadeIn_0.5s_ease-out_forwards]">
+                                {categories.map((cat, idx) => {
+                                    const isCustom = cat.id && cat.id.length > 30;
+                                    const catName = cat.name;
+                                    const catSignatures = getSignaturesByCategory(cat.name);
 
-                            const preview = catSignatures.length > 0 ? catSignatures[0].signature_url : null;
-                            const prevName = catSignatures.length > 0 ? (catSignatures[0].first_name ? `${catSignatures[0].first_name} ${catSignatures[0].last_name || ''}` : '') : null;
+                                    const preview = catSignatures.length > 0 ? catSignatures[0].signature_url : null;
+                                    const prevName = catSignatures.length > 0 ? (catSignatures[0].first_name ? `${catSignatures[0].first_name} ${catSignatures[0].last_name || ''}` : '') : null;
 
-                            return (
-                                <CategoryCard
-                                    key={cat.id || idx}
-                                    title={cat.name}
-                                    description={cat.description}
-                                    icon={getIcon(cat.icon)}
-                                    signatureCount={catSignatures.length}
-                                    previewUrl={preview}
-                                    previewName={prevName}
-                                    onAddNew={() => {
-                                        const simpleName = cat.name.split(' / ')[0];
-                                        setSelectedCategory(simpleName);
-                                        setShowSignaturePad(true);
-                                    }}
-                                    onViewAll={() => {
-                                        // Open view all modal
-                                        setViewingCategory({ name: cat.name, signatures: catSignatures });
-                                    }}
-                                    onEdit={isCustom ? () => {
-                                        setEditingCategory(cat);
-                                        setShowCategoryModal(true);
-                                    } : null}
-                                    onDelete={isCustom ? () => handleDeleteCategory(cat) : null}
-                                />
-                            );
-                        })}
-                    </div>
+                                    return (
+                                        <CategoryCard
+                                            key={cat.id || idx}
+                                            title={cat.name}
+                                            description={cat.description}
+                                            icon={getIcon(cat.icon)}
+                                            signatureCount={catSignatures.length}
+                                            previewUrl={preview}
+                                            previewName={prevName}
+                                            onAddNew={() => {
+                                                const simpleName = cat.name.split(' / ')[0];
+                                                setSelectedCategory(simpleName);
+                                                setShowSignaturePad(true);
+                                            }}
+                                            onViewAll={() => {
+                                                // Open view all modal
+                                                setViewingCategory({ name: cat.name, signatures: catSignatures });
+                                            }}
+                                            onEdit={isCustom ? () => {
+                                                setEditingCategory(cat);
+                                                setShowCategoryModal(true);
+                                            } : null}
+                                            onDelete={isCustom ? () => handleDeleteCategory(cat) : null}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </main>
                 </div>
-            </main>
+            </div>
 
             {showSignaturePad && (
                 <SignaturePad

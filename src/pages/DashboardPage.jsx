@@ -181,7 +181,7 @@ const DashboardPage = ({ session }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] leading-relaxed overflow-x-hidden">
+        <div className="min-h-screen bg-[#FDFDFD] font-sans text-[#1A1A1A] leading-relaxed overflow-x-hidden">
             <Header userEmail={session?.user?.email} onSignOut={handleSignOut} isPro={isPro} onGetStarted={() => setIsTutorialOpen(true)} />
 
             <div className="max-w-[1400px] mx-auto py-12 px-8 animate-[fadeIn_0.8s_ease-out_0.2s_backwards]">
@@ -191,11 +191,11 @@ const DashboardPage = ({ session }) => {
                     <main className="animate-[slideLeft_0.6s_ease-out_0.4s_backwards]">
                         <div className="flex justify-between items-center mb-8 max-md:flex-col max-md:items-start max-md:gap-4">
                             <div>
-                                <h1 className="font-['Crimson_Pro'] text-4xl font-semibold text-[var(--template-text-primary)]">Dashboard</h1>
+                                <h1 className="font-['Calistoga'] text-4xl font-bold tracking-wide text-[#1A1A1A]">Dashboard</h1>
                             </div>
                             <button
                                 onClick={() => navigate('/compose')}
-                                className="bg-gradient-to-br from-[var(--template-accent)] to-[#D69520] text-white px-8 py-4 border-none rounded-xl font-semibold cursor-pointer text-base shadow-[var(--template-shadow-md)] transition-all flex items-center gap-2 hover:-translate-y-1 hover:shadow-[var(--template-shadow-lg)]"
+                                className="bg-[#F9A602] hover:bg-[#e09602] text-white px-8 py-4 border-none rounded-xl font-semibold cursor-pointer text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:-translate-y-1"
                             >
                                 <span className="text-xl">+</span> Upload Document
                             </button>
