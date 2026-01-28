@@ -7,6 +7,7 @@ import ComposePage from './pages/ComposePage';
 import RecipientSignPage from './pages/RecipientSignPage';
 import DashboardPage from './pages/DashboardPage';
 import PricingPage from './pages/PricingPage';
+import MySignaturesPage from './pages/MySignaturesPage';
 import './App.css';
 
 function App() {
@@ -58,6 +59,9 @@ function App() {
                 } />
                 <Route path="/pricing" element={
                     !session ? <Navigate to="/login" /> : <PricingPage />
+                } />
+                <Route path="/my-signatures" element={
+                    !session ? <Navigate to="/login" /> : <MySignaturesPage />
                 } />
 
                 {/* Fallback */}

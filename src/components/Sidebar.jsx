@@ -63,6 +63,18 @@ const Sidebar = ({ activeTab, onTabChange }) => {
                         </div>
                     );
                 })}
+
+                {/* My Signatures - Special Styling */}
+                <div
+                    onClick={() => handleClick({ id: 'my-signatures', label: 'My Signatures', icon: '✒️', path: '/my-signatures' })}
+                    className={`flex items-center gap-3 p-3 rounded-xl mt-6 cursor-pointer transition-all duration-300 font-medium ${location.pathname === '/my-signatures'
+                        ? 'bg-[#008f33] text-white shadow-[0_4px_14px_0_rgba(0,166,81,0.39)]' // Custom green from template
+                        : 'text-[var(--template-text-secondary)] hover:bg-[#e6f4ea] hover:text-[#008f33]'
+                        }`}
+                >
+                    <span className="text-xl">✒️</span>
+                    <span>My Signatures</span>
+                </div>
             </div>
         </aside>
     );

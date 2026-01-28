@@ -4,12 +4,17 @@ import { Eraser, Check, X, Save, Trash2, PenTool, LayoutGrid } from 'lucide-reac
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 
-const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
+const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = 'General', categories = [] }) => {
     const sigCanvas = useRef({});
     const [activeTab, setActiveTab] = useState('draw'); // 'draw' or 'saved'
     const [savedSignatures, setSavedSignatures] = useState([]);
-    const [saveToProfile, setSaveToProfile] = useState(false);
+    const [saveToProfile, setSaveToProfile] = useState(!!initialCategory && !!userId);
     const [loading, setLoading] = useState(false);
+
+    // New state for signature details
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [category, setCategory] = useState(initialCategory || 'Personal');
 
     useEffect(() => {
         if (userId && activeTab === 'saved') {
@@ -42,10 +47,16 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
         const dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');
 
         if (userId && saveToProfile) {
-            // Save to database
+            // Save to database with new fields
             const { error } = await supabase
                 .from('signatures')
-                .insert([{ user_id: userId, signature_url: dataURL }]);
+                .insert([{
+                    user_id: userId,
+                    signature_url: dataURL,
+                    first_name: firstName,
+                    last_name: lastName,
+                    category: category
+                }]);
 
             if (error) {
                 console.error("Error saving signature:", error);
@@ -117,17 +128,64 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId }) => {
                             </div>
 
                             {userId && (
-                                <div className="mt-4 flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        id="save-sig"
-                                        checked={saveToProfile}
-                                        onChange={(e) => setSaveToProfile(e.target.checked)}
-                                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                    <label htmlFor="save-sig" className="text-sm text-gray-600 cursor-pointer select-none">
-                                        Save this signature to my profile
-                                    </label>
+                                <div className="mt-4 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="save-sig"
+                                            checked={saveToProfile}
+                                            onChange={(e) => setSaveToProfile(e.target.checked)}
+                                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <label htmlFor="save-sig" className="text-sm text-gray-600 cursor-pointer select-none">
+                                            Save this signature to my profile
+                                        </label>
+                                    </div>
+
+                                    {saveToProfile && (
+                                        <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">First Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={firstName}
+                                                    onChange={(e) => setFirstName(e.target.value)}
+                                                    className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
+                                                    placeholder="John"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={lastName}
+                                                    onChange={(e) => setLastName(e.target.value)}
+                                                    className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
+                                                    placeholder="Doe"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Category</label>
+                                                <select
+                                                    value={category}
+                                                    onChange={(e) => setCategory(e.target.value)}
+                                                    className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
+                                                >
+                                                    {categories && categories.length > 0 ? (
+                                                        categories.map((cat) => {
+                                                            // Handle simple name extraction if it's a complex label
+                                                            const val = cat.name.split(' / ')[0];
+                                                            return <option key={cat.id || val} value={val}>{cat.name}</option>;
+                                                        })
+                                                    ) : (
+                                                        <>
+                                                            <option value="General">General</option>
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
