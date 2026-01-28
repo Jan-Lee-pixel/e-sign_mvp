@@ -14,6 +14,7 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
     // New state for signature details
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [includePrintedName, setIncludePrintedName] = useState(false);
     const [category, setCategory] = useState(initialCategory || 'Personal');
 
     useEffect(() => {
@@ -44,7 +45,36 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
             return;
         }
 
-        const dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');
+        let dataURL = sigCanvas.current.getCanvas().toDataURL('image/png');
+
+        // Composite Printed Name if requested
+        if (includePrintedName && (firstName || lastName)) {
+            const canvas = document.createElement('canvas');
+            const signatureCanvas = sigCanvas.current.getCanvas();
+            const ctx = canvas.getContext('2d');
+
+            // Dimensions
+            const padding = 20;
+            const textHeight = 40;
+            const width = signatureCanvas.width;
+            const height = signatureCanvas.height + textHeight + padding;
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw Signature
+            ctx.drawImage(signatureCanvas, 0, 0);
+
+            // Draw Text
+            ctx.font = "bold 24px 'DM Sans', sans-serif";
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const fullName = `${firstName} ${lastName}`.trim();
+            ctx.fillText(fullName, width / 2, signatureCanvas.height + (padding / 2) + (textHeight / 2));
+
+            dataURL = canvas.toDataURL('image/png');
+        }
 
         if (userId && saveToProfile) {
             // Save to database with new fields
@@ -127,44 +157,61 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
                                 </div>
                             </div>
 
-                            {userId && (
-                                <div className="mt-4 space-y-3">
-                                    <div className="flex items-center gap-2">
+                            <div className="mt-4 space-y-3">
+                                <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">First Name</label>
                                         <input
-                                            type="checkbox"
-                                            id="save-sig"
-                                            checked={saveToProfile}
-                                            onChange={(e) => setSaveToProfile(e.target.checked)}
-                                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                                            type="text"
+                                            value={firstName}
+                                            onChange={(e) => setFirstName(e.target.value)}
+                                            className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
+                                            placeholder="John"
                                         />
-                                        <label htmlFor="save-sig" className="text-sm text-gray-600 cursor-pointer select-none">
-                                            Save this signature to my profile
-                                        </label>
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
+                                        <input
+                                            type="text"
+                                            value={lastName}
+                                            onChange={(e) => setLastName(e.target.value)}
+                                            className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
+                                            placeholder="Doe"
+                                        />
+                                    </div>
+                                </div>
 
-                                    {saveToProfile && (
-                                        <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">First Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={firstName}
-                                                    onChange={(e) => setFirstName(e.target.value)}
-                                                    className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
-                                                    placeholder="John"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={lastName}
-                                                    onChange={(e) => setLastName(e.target.value)}
-                                                    className="w-full text-sm border-gray-200 rounded-lg focus:border-primary focus:ring-primary"
-                                                    placeholder="Doe"
-                                                />
-                                            </div>
-                                            <div className="col-span-2">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="include-printed-name"
+                                        checked={includePrintedName}
+                                        onChange={(e) => setIncludePrintedName(e.target.checked)}
+                                        disabled={!firstName && !lastName}
+                                        className="rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
+                                    />
+                                    <label htmlFor="include-printed-name" className={`text-sm select-none cursor-pointer ${!firstName && !lastName ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Include printed name below signature
+                                    </label>
+                                </div>
+
+                                {userId && (
+                                    <>
+                                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                id="save-sig"
+                                                checked={saveToProfile}
+                                                onChange={(e) => setSaveToProfile(e.target.checked)}
+                                                className="rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="save-sig" className="text-sm text-gray-600 cursor-pointer select-none">
+                                                Save this signature to my profile
+                                            </label>
+                                        </div>
+
+                                        {saveToProfile && (
+                                            <div className="mt-2 text-sm text-gray-500">
                                                 <label className="block text-xs font-medium text-gray-500 mb-1">Category</label>
                                                 <select
                                                     value={category}
@@ -184,10 +231,10 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
                                                     )}
                                                 </select>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                                        )}
+                                    </>
+                                )}
+                            </div>
 
                             <div className="flex justify-end gap-3 mt-6">
                                 <Button
