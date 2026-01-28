@@ -32,12 +32,14 @@ const Header = ({ userEmail, onSignOut, isPro, onGetStarted }) => {
                     >
                         Sign Out
                     </button>
-                    <button
-                        onClick={onGetStarted}
-                        className="bg-[var(--template-primary)] text-white px-7 py-3 rounded-lg font-semibold shadow-[var(--template-shadow-sm)] hover:bg-[var(--template-primary-dark)] hover:-translate-y-0.5 hover:shadow-[var(--template-shadow-md)] transition-all"
-                    >
-                        Get Started
-                    </button>
+                    {onGetStarted && (
+                        <button
+                            onClick={onGetStarted}
+                            className="bg-[var(--template-primary)] text-white px-7 py-3 rounded-lg font-semibold shadow-[var(--template-shadow-sm)] hover:bg-[var(--template-primary-dark)] hover:-translate-y-0.5 hover:shadow-[var(--template-shadow-md)] transition-all"
+                        >
+                            Get Started
+                        </button>
+                    )}
                 </div>
                 {/* Mobile menu placeholder */}
                 <div className="hidden max-md:block">

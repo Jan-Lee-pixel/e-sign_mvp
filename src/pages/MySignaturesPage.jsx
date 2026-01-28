@@ -51,18 +51,17 @@ const MySignaturesPage = () => {
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: true });
 
-                if (cats && cats.length > 0) {
-                    setCategories(cats);
+                const generalCategory = {
+                    id: 'General',
+                    name: 'General',
+                    description: 'All your signatures in one place.',
+                    icon: 'LayoutGrid'
+                };
+
+                if (cats) {
+                    setCategories([generalCategory, ...cats]);
                 } else {
-                    // Default "General" category if none exist in DB
-                    setCategories([
-                        {
-                            id: 'General',
-                            name: 'General',
-                            description: 'All your signatures in one place.',
-                            icon: 'LayoutGrid'
-                        }
-                    ]);
+                    setCategories([generalCategory]);
                 }
             }
         } catch (err) {

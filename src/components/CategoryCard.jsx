@@ -22,9 +22,33 @@ const CategoryCard = ({
                     }`}>
                     {icon}
                 </div>
-                <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
-                    {signatureCount} Signature{signatureCount !== 1 ? 's' : ''}
-                </span>
+                <div className="flex items-center gap-2">
+                    {(onEdit || onDelete) && (
+                        <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                            {onEdit && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                                    className="p-1.5 text-gray-400 hover:text-primary hover:bg-green-50 rounded-lg transition-colors"
+                                    title="Edit Category"
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </button>
+                            )}
+                            {onDelete && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete Category"
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            )}
+                        </div>
+                    )}
+                    <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
+                        {signatureCount} Signature{signatureCount !== 1 ? 's' : ''}
+                    </span>
+                </div>
             </div>
 
             <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
@@ -62,28 +86,7 @@ const CategoryCard = ({
                 </button>
             </div>
 
-            {(onEdit || onDelete) && (
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                    {onEdit && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                            className="p-1.5 bg-white text-gray-500 rounded-lg shadow-sm border border-gray-100 hover:text-primary hover:border-primary"
-                            title="Edit Category"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                        </button>
-                    )}
-                    {onDelete && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                            className="p-1.5 bg-white text-gray-500 rounded-lg shadow-sm border border-gray-100 hover:text-red-500 hover:border-red-500"
-                            title="Delete Category"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    )}
-                </div>
-            )}
+
         </div>
     );
 };
