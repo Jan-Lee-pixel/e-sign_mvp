@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 const port = 4242;
@@ -39,6 +40,24 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     process.env.VITE_SUPABASE_URL,
                     process.env.SUPABASE_SERVICE_ROLE_KEY
                 );
+
+                // Log payment event
+                const { error: eventError } = await supabase
+                    .from('payment_events')
+                    .insert({
+                        stripe_event_id: event.id,
+                        type: event.type,
+                        status: paymentIntent.status,
+                        payload: event,
+                        user_id: userId
+                    });
+
+                if (eventError) {
+                    console.error('Error logging payment event:', eventError);
+                } else {
+                    console.log('Payment event logged successfully.');
+                }
+
 
                 const { error } = await supabase
                     .from('profiles')
