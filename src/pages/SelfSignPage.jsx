@@ -101,6 +101,28 @@ function SelfSignPage({ session }) {
         });
     };
 
+    const handleChangeFile = () => {
+        const resetFile = () => {
+            setPdfFile(null);
+            setPdfBuffer(null);
+            setSignatures([]);
+            setPageNumber(1);
+            setPageDimensions(null);
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        };
+
+        if (signatures.length > 0) {
+            setConfirmModal({
+                isOpen: true,
+                title: "Change File",
+                message: "Changing the file will remove all current signatures. Are you sure?",
+                onConfirm: resetFile
+            });
+        } else {
+            resetFile();
+        }
+    };
+
     const handleDownload = async () => {
         if (!pdfBuffer || signatures.length === 0) return;
 
@@ -213,6 +235,15 @@ function SelfSignPage({ session }) {
                                     <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                         <PenTool size={14} /> Signatures
                                     </h3>
+                                    <div className="flex gap-2 mb-4">
+                                        <Button
+                                            onClick={handleChangeFile}
+                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-red-500 hover:border-red-500 hover:bg-red-50 shadow-sm transition-all py-5 mb-3"
+                                        >
+                                            <UploadCloud size={18} className="mr-2" />
+                                            Change File
+                                        </Button>
+                                    </div>
                                     <div className="flex gap-2 mb-4">
                                         <Button
                                             onClick={() => setIsSignatureModalOpen(true)}

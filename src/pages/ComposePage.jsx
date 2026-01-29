@@ -171,6 +171,32 @@ const ComposePage = () => {
         });
     };
 
+    const handleChangeFile = () => {
+        const resetFile = () => {
+            setPdfFile(null);
+            setPdfBuffer(null);
+            setFields([]);
+            setPageNumber(1);
+            setPageDimensions(null);
+            setGeneratedLink(null);
+            setError(null);
+            setEditingEnvelope(null);
+            setEnvelopeName("Untitled Envelope");
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        };
+
+        if (fields.length > 0) {
+            setConfirmModal({
+                isOpen: true,
+                title: "Change File",
+                message: "Changing the file will remove all current fields. Are you sure?",
+                onConfirm: resetFile
+            });
+        } else {
+            resetFile();
+        }
+    };
+
     const handleSend = async () => {
         if (!pdfBuffer || fields.length === 0) return;
         setIsSending(true);
@@ -357,6 +383,16 @@ const ComposePage = () => {
                                     <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                         <PenTool size={14} /> Signature Fields
                                     </h3>
+
+                                    <div className="flex gap-3 mb-3">
+                                        <Button
+                                            onClick={handleChangeFile}
+                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-red-500 hover:border-red-500 hover:bg-red-50 shadow-sm transition-all py-5"
+                                        >
+                                            <UploadCloud size={18} className="mr-2" />
+                                            Change File
+                                        </Button>
+                                    </div>
 
                                     <div className="flex gap-3 mb-3">
                                         <Button
