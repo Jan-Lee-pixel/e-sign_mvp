@@ -13,9 +13,12 @@ const Header = ({ userEmail, onSignOut, isPro, onGetStarted }) => {
                 </div>
                 <div className="flex gap-8 items-center max-md:hidden">
                     {isPro ? (
-                        <span className="bg-gradient-to-r from-[var(--template-warning)] to-[#D69520] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-[var(--template-shadow-sm)]">
+                        <button
+                            onClick={() => navigate('/subscription')}
+                            className="bg-gradient-to-r from-[var(--template-warning)] to-[#D69520] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-[var(--template-shadow-sm)] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                        >
                             PRO
-                        </span>
+                        </button>
                     ) : (
                         <button
                             onClick={() => navigate('/pricing')}

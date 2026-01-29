@@ -8,6 +8,7 @@ import RecipientSignPage from './pages/RecipientSignPage';
 import DashboardPage from './pages/DashboardPage';
 import PricingPage from './pages/PricingPage';
 import MySignaturesPage from './pages/MySignaturesPage';
+import SubscriptionPage from './pages/SubscriptionPage';
 import './App.css';
 
 function App() {
@@ -62,6 +63,9 @@ function App() {
                 } />
                 <Route path="/my-signatures" element={
                     !session ? <Navigate to="/login" /> : <MySignaturesPage />
+                } />
+                <Route path="/subscription" element={
+                    !session ? <Navigate to="/login" /> : <SubscriptionPage />
                 } />
 
                 {/* Fallback */}

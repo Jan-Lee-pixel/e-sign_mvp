@@ -157,6 +157,41 @@ app.post('/create-payment-intent', async (req, res) => {
     }
 });
 
+app.post('/cancel-subscription', async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'Missing userId' });
+        }
+
+        const supabase = createClient(
+            process.env.VITE_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                subscription_status: 'free',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+
+        if (error) {
+            console.error('Error cancelling subscription:', error);
+            return res.status(500).json({ error: 'Database update failed' });
+        }
+
+        console.log(`User ${userId} cancelled subscription (downgraded to free).`);
+        res.json({ success: true, message: 'Subscription cancelled' });
+
+    } catch (error) {
+        console.error('Error in cancel-subscription:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
