@@ -8,6 +8,7 @@ import RecipientSignPage from './pages/RecipientSignPage';
 import DashboardPage from './pages/DashboardPage';
 import PricingPage from './pages/PricingPage';
 import MySignaturesPage from './pages/MySignaturesPage';
+import AIAssistantPage from './pages/AIAssistantPage';
 import './App.css';
 
 function App() {
@@ -62,6 +63,9 @@ function App() {
                 } />
                 <Route path="/my-signatures" element={
                     !session ? <Navigate to="/login" /> : <MySignaturesPage />
+                } />
+                <Route path="/tools/ai-assistant" element={
+                    !session ? <Navigate to="/login" /> : <AIAssistantPage session={session} />
                 } />
 
                 {/* Fallback */}
