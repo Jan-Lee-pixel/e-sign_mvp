@@ -7,6 +7,9 @@ import CategoryCard from '../components/CategoryCard';
 import SignaturePad from '../components/SignaturePad';
 import CategoryModal from '../components/CategoryModal';
 import SignatureListModal from '../components/SignatureListModal';
+
+import AlertModal from '../components/AlertModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { Plus, Briefcase, User, PenTool, LayoutGrid } from 'lucide-react';
 
 const MySignaturesPage = () => {
@@ -25,6 +28,10 @@ const MySignaturesPage = () => {
     // Selection state
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [userId, setUserId] = useState(null);
+
+    // Alert & Confirm Modal State
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, message: '', title: 'Alert', type: 'error' });
+    const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, message: '', title: 'Confirm', onConfirm: () => { } });
 
     useEffect(() => {
         fetchData();
@@ -87,27 +94,53 @@ const MySignaturesPage = () => {
         setShowSignaturePad(false);
     };
 
-    const handleDeleteCategory = async (cat) => {
+    const handleDeleteCategory = (cat) => {
         if (cat.id && cat.id.length < 30) {
-            alert("Cannot delete default categories.");
+            setAlertConfig({
+                isOpen: true,
+                title: "Cannot Delete",
+                message: "Cannot delete default categories.",
+                type: "error"
+            });
             return;
         }
 
-        if (!confirm(`Delete category "${cat.name}"? Signatures will remain but lose this category.`)) return;
+        setConfirmConfig({
+            isOpen: true,
+            title: "Delete Category",
+            message: `Delete category "${cat.name}"? Signatures will remain but lose this category.`,
+            onConfirm: () => executeDeleteCategory(cat.id)
+        });
+    };
 
-        const { error } = await supabase.from('signature_categories').delete().eq('id', cat.id);
+    const executeDeleteCategory = async (catId) => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        const { error } = await supabase.from('signature_categories').delete().eq('id', catId);
         if (error) {
             console.error('Error deleting category:', error);
-            alert('Failed to delete category');
+            setAlertConfig({
+                isOpen: true,
+                title: "Error",
+                message: "Failed to delete category",
+                type: "error"
+            });
         } else {
             fetchData();
         }
     };
 
     // Deleting a signature from the list modal
-    const handleDeleteSignature = async (id) => {
-        if (!confirm("Are you sure you want to delete this signature?")) return;
+    const handleDeleteSignature = (id) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Delete Signature",
+            message: "Are you sure you want to delete this signature?",
+            onConfirm: () => executeDeleteSignature(id)
+        });
+    };
 
+    const executeDeleteSignature = async (id) => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
         const { error } = await supabase.from('signatures').delete().eq('id', id);
         if (!error) {
             const newSigs = signatures.filter(s => s.id !== id);
@@ -240,6 +273,22 @@ const MySignaturesPage = () => {
                     onDelete={handleDeleteSignature}
                 />
             )}
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
+
+            <ConfirmationModal
+                isOpen={confirmConfig.isOpen}
+                onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+            />
         </div>
     );
 };

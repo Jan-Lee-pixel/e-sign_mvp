@@ -6,7 +6,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title = "Confirm", mes
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-6">
                     <div className="flex flex-col items-center text-center gap-4">
