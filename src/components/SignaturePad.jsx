@@ -53,10 +53,15 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
             const signatureCanvas = sigCanvas.current.getCanvas();
             const ctx = canvas.getContext('2d');
 
-            // Dimensions
-            const padding = 20;
-            const textHeight = 40;
             const width = signatureCanvas.width;
+            // Assume base width of ~500px for scale calculation (modal width)
+            const scale = Math.max(1, width / 500);
+
+            // Scaled Dimensions
+            const padding = 20 * scale;
+            const fontSize = 48 * scale; // Increased from 24 for better visibility
+            const textHeight = fontSize * 1.5; // ample line height
+
             const height = signatureCanvas.height + textHeight + padding;
 
             canvas.width = width;
@@ -66,12 +71,17 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
             ctx.drawImage(signatureCanvas, 0, 0);
 
             // Draw Text
-            ctx.font = "bold 24px 'DM Sans', sans-serif";
+            ctx.font = `bold ${fontSize}px 'DM Sans', sans-serif`;
             ctx.fillStyle = "black";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             const fullName = `${firstName} ${lastName}`.trim();
-            ctx.fillText(fullName, width / 2, signatureCanvas.height + (padding / 2) + (textHeight / 2));
+
+            // Center text in the appended area
+            const textY = signatureCanvas.height + (padding / 2) + (textHeight / 2);
+            ctx.fillText(fullName, width / 2, textY);
+
+            console.log(`Generated composite signature: ${width}x${height}, scale=${scale}, text=${fullName}`);
 
             dataURL = canvas.toDataURL('image/png');
         }
