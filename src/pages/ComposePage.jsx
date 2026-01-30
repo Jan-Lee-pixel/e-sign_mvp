@@ -11,6 +11,8 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import AlertModal from '../components/AlertModal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import FieldsSidebar from '../components/FieldsSidebar';
+import ShareModal from '../components/ShareModal';
 import emailjs from '@emailjs/browser';
 
 const ComposePage = () => {
@@ -34,6 +36,7 @@ const ComposePage = () => {
     const [isSending, setIsSending] = useState(false);
     const [generatedLink, setGeneratedLink] = useState(null);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: () => { } });
     const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
@@ -137,15 +140,19 @@ const ComposePage = () => {
         }
     };
 
-    const addField = () => {
+    const addField = (type = 'signature', label = null) => {
         const newField = {
             id: crypto.randomUUID(),
             x: 50,
             y: 50,
-            page: pageNumber
+            page: pageNumber,
+            type,
+            label: label || (type === 'signature' ? 'Sign Here' : type)
         };
         setFields([...fields, newField]);
     };
+
+    // ... inside render ...
 
     const updateFieldPosition = (id, newPos) => {
         setFields(fields.map(f => f.id === id ? { ...f, x: newPos.x, y: newPos.y } : f));
@@ -223,7 +230,9 @@ const ComposePage = () => {
                     envelope_id: envelopeId,
                     page_number: f.page,
                     x_pct: (f.x / pageDimensions.width) * 100,
-                    y_pct: (f.y / pageDimensions.height) * 100
+                    y_pct: (f.y / pageDimensions.height) * 100,
+                    type: f.type,
+                    label: f.label
                 }));
 
                 const { error: insertError } = await supabase
@@ -269,7 +278,9 @@ const ComposePage = () => {
                     envelope_id: envelopeData.id,
                     page_number: f.page,
                     x_pct: (f.x / pageDimensions.width) * 100,
-                    y_pct: (f.y / pageDimensions.height) * 100
+                    y_pct: (f.y / pageDimensions.height) * 100,
+                    type: f.type,
+                    label: f.label
                 }));
 
                 const { error: fieldsError } = await supabase
@@ -279,6 +290,7 @@ const ComposePage = () => {
                 if (fieldsError) throw fieldsError;
 
                 setGeneratedLink(`${window.location.origin}/sign/${accessToken}`);
+                setIsShareModalOpen(true);
             }
 
         } catch (err) {
@@ -355,6 +367,22 @@ const ComposePage = () => {
                             />
                         </div>
                     </div>
+
+                    <div className="ml-auto">
+                        <Button
+                            onClick={handleSend}
+                            disabled={fields.length === 0 || isSending}
+                            isLoading={isSending}
+                            className="bg-[#F9A602] hover:bg-[#e09602] text-white shadow-md hover:shadow-lg transition-all rounded-xl px-6 py-2.5 font-semibold text-sm flex items-center gap-2"
+                        >
+                            {isSending ? (editingEnvelope ? 'Saving...' : 'Generating...') : (
+                                <>
+                                    {editingEnvelope ? <CheckCircle size={16} /> : <LinkIcon size={16} />}
+                                    {editingEnvelope ? 'Save Changes' : 'Generate Link'}
+                                </>
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </header>
 
@@ -385,106 +413,45 @@ const ComposePage = () => {
                             <div className="space-y-8 animate-[slideRight_0.5s_ease-out]">
                                 <div>
                                     <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
-                                        <PenTool size={14} /> Signature Fields
+                                        <PenTool size={14} /> Fields
                                     </h3>
 
                                     <div className="flex gap-3 mb-3">
                                         <Button
                                             onClick={handleChangeFile}
-                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-red-500 hover:border-red-500 hover:bg-red-50 shadow-sm transition-all py-5"
+                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-red-500 hover:border-red-500 hover:bg-red-50 shadow-sm transition-all py-3"
                                         >
                                             <UploadCloud size={18} className="mr-2" />
                                             Change File
                                         </Button>
                                     </div>
 
-                                    <div className="flex gap-3 mb-3">
-                                        <Button
-                                            onClick={addField}
-                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-5"
-                                        >
-                                            <Plus size={18} className="mr-2" />
-                                            Add Box
-                                        </Button>
-                                        <Button
+                                    {/* Fields Sidebar Replacement */}
+                                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm h-[400px]">
+                                        <FieldsSidebar onAddField={addField} />
+                                    </div>
+
+                                    <div className="mt-4 flex justify-end">
+                                        <button
                                             onClick={clearAllFields}
-                                            variant="ghost"
-                                            size="icon"
                                             disabled={fields.length === 0}
-                                            title="Clear All"
-                                            className="h-auto w-12 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                                            className="text-xs text-red-400 hover:text-red-600 hover:underline flex items-center gap-1"
                                         >
-                                            <Trash2 size={20} />
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-[var(--template-text-light)] italic flex items-center gap-1.5 px-1">
-                                        <AlertCircle size={12} />
-                                        Double-click a box to remove it.
-                                    </p>
-                                </div>
-
-                                <div className="pt-8 border-t border-[var(--template-border)]">
-                                    <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
-                                        <Send size={14} /> Actions
-                                    </h3>
-                                    <div className="flex flex-col gap-4">
-                                        {(!generatedLink || editingEnvelope) ? (
-                                            <Button
-                                                onClick={handleSend}
-                                                disabled={fields.length === 0 || isSending}
-                                                isLoading={isSending}
-                                                className="w-full bg-[var(--template-primary)] text-white hover:bg-[var(--template-primary-dark)] shadow-[var(--template-shadow-md)] hover:shadow-[var(--template-shadow-lg)] hover:-translate-y-0.5 transition-all py-6 rounded-xl text-base font-semibold"
-                                            >
-                                                {isSending ? (editingEnvelope ? 'Saving...' : 'Sending...') : (
-                                                    <>
-                                                        {editingEnvelope ? <CheckCircle size={18} className="mr-2" /> : <LinkIcon size={18} className="mr-2" />}
-                                                        {editingEnvelope ? 'Save Changes' : 'Generate Link'}
-                                                    </>
-                                                )}
-                                            </Button>
-                                        ) : null}
-
-                                        {generatedLink && (
-                                            <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
-                                                {!editingEnvelope && (
-                                                    <div className="bg-green-50 px-4 py-3 rounded-xl border border-green-100 text-green-700 text-sm flex items-center gap-2 shadow-sm">
-                                                        <CheckCircle size={18} className="shrink-0" />
-                                                        <span className="font-medium">Link Ready!</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        readOnly
-                                                        value={generatedLink}
-                                                        className="text-xs h-10 bg-white border-[var(--template-border)] focus:border-[var(--template-primary)] text-[var(--template-text-secondary)]"
-                                                    />
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="icon"
-                                                        onClick={() => navigator.clipboard.writeText(generatedLink)}
-                                                        title="Copy Link"
-                                                        className="h-10 w-10 shrink-0 bg-white border border-[var(--template-border)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)]"
-                                                    >
-                                                        <Copy size={16} />
-                                                    </Button>
-                                                </div>
-                                                <Button
-                                                    onClick={() => setIsEmailModalOpen(true)}
-                                                    className="w-full bg-[var(--template-primary)] text-white hover:bg-[var(--template-primary-dark)] shadow-[var(--template-shadow-sm)] py-5 rounded-xl font-medium"
-                                                >
-                                                    <Send size={16} className="mr-2" />
-                                                    Send via Email
-                                                </Button>
-                                            </div>
-                                        )}
+                                            <Trash2 size={12} /> Clear All Fields
+                                        </button>
                                     </div>
                                 </div>
+
+                                {/* Removed Actions Section - Moved to Header */}
                             </div>
                         )}
                     </div>
                 </aside>
 
-                {/* Main Canvas */}
+                {/* ... Main Canvas ... */}
+
+
+
                 <main className="flex-1 bg-gray-100/50 overflow-auto flex justify-center p-8 relative">
                     {pdfFile ? (
                         <div className="relative h-fit my-auto shadow-xl ring-1 ring-black/5 bg-white">
@@ -502,6 +469,8 @@ const ComposePage = () => {
                                                 initialPosition={{ x: field.x, y: field.y }}
                                                 onPositionChange={(pos) => updateFieldPosition(field.id, pos)}
                                                 containerDimensions={pageDimensions}
+                                                type={field.type}
+                                                label={field.label}
                                             />
                                         </div>
                                     );
@@ -519,6 +488,16 @@ const ComposePage = () => {
                     )}
                 </main>
             </div>
+
+            <ShareModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                link={generatedLink}
+                onEmail={() => {
+                    setIsShareModalOpen(false);
+                    setIsEmailModalOpen(true);
+                }}
+            />
 
             <EmailModal
                 isOpen={isEmailModalOpen}
@@ -551,7 +530,7 @@ const ComposePage = () => {
                 message={alertModal.message}
                 type={alertModal.type}
             />
-        </div>
+        </div >
     );
 };
 

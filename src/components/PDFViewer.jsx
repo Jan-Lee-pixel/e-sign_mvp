@@ -40,6 +40,31 @@ const PDFViewer = ({ pdfFile, children, pageNumber, onPageChange, onPageLoad }) 
                     {/* Children (DraggableSignature) will be rendered here with pointer-events-auto */}
                     {children}
                 </div>
+
+                {/* Vertical Action Toolbar */}
+                <div className="absolute top-4 right-4 flex flex-col gap-2 z-20 pointer-events-auto">
+                    <button
+                        onClick={() => setPageWidth(prev => Math.min(prev + 50, 1000))}
+                        className="w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-[var(--template-primary)] hover:border-[var(--template-primary)] transition-colors"
+                        title="Zoom In"
+                    >
+                        <span className="text-xl font-bold">+</span>
+                    </button>
+                    <button
+                        onClick={() => setPageWidth(prev => Math.max(prev - 50, 400))}
+                        className="w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-[var(--template-primary)] hover:border-[var(--template-primary)] transition-colors"
+                        title="Zoom Out"
+                    >
+                        <span className="text-xl font-bold">-</span>
+                    </button>
+                    <button
+                        onClick={() => window.print()}
+                        className="w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-[var(--template-primary)] hover:border-[var(--template-primary)] transition-colors"
+                        title="Print"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect width="12" height="8" x="6" y="14" /></svg>
+                    </button>
+                </div>
             </div>
 
             {numPages && (

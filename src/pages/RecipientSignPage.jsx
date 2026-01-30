@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import PDFViewer from '../components/PDFViewer';
 import SignaturePad from '../components/SignaturePad';
-import { embedSignature } from '../utils/pdfUtils';
-import { PenTool, CheckCircle, AlertTriangle, ArrowLeft, Loader2, Info, Pencil } from 'lucide-react';
+import { embedSignature, embedText } from '../utils/pdfUtils';
+import { PenTool, CheckCircle, AlertTriangle, ArrowLeft, Loader2, Info, Pencil, CheckSquare } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
+import TextInputModal from '../components/TextInputModal';
 import { Button } from '../components/ui/Button';
 
 const RecipientSignPage = () => {
@@ -20,6 +21,7 @@ const RecipientSignPage = () => {
 
     // Signing state
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+    const [isInputModalOpen, setIsInputModalOpen] = useState(false);
     const [activeField, setActiveField] = useState(null);
     const [signedFields, setSignedFields] = useState({});
     const [isSaving, setIsSaving] = useState(false);
@@ -69,6 +71,7 @@ const RecipientSignPage = () => {
     };
 
     const handlePageLoad = (page) => {
+        // ... same logic ...
         const rotation = page.rotate || page.rotation || 0;
         let validWidth = page.originalWidth || page.width;
         let validHeight = page.originalHeight || page.height;
@@ -91,12 +94,46 @@ const RecipientSignPage = () => {
 
     const handleSignatureSave = async (signatureDataURL) => {
         if (!activeField) return;
-
-        setSignedFields(prev => ({
-            ...prev,
-            [activeField.id]: signatureDataURL
-        }));
+        setSignedFields(prev => ({ ...prev, [activeField.id]: signatureDataURL }));
         setIsSignatureModalOpen(false);
+    };
+
+    const handleInputSave = (value) => {
+        if (!activeField) return;
+        setSignedFields(prev => ({ ...prev, [activeField.id]: value }));
+        setIsInputModalOpen(false);
+    };
+
+    const handleFieldInteraction = (field) => {
+        setActiveField(field);
+
+        switch (field.type) {
+            case 'signature':
+            case 'initial':
+            case 'stamp':
+                setIsSignatureModalOpen(true);
+                break;
+            case 'date':
+                // Auto-fill today's date
+                const today = new Date().toLocaleDateString();
+                setSignedFields(prev => ({ ...prev, [field.id]: today }));
+                break;
+            case 'checkbox':
+                // Toggle 'X' or empty
+                setSignedFields(prev => {
+                    const current = prev[field.id];
+                    return { ...prev, [field.id]: current === 'X' ? '' : 'X' };
+                });
+                break;
+            case 'text':
+            case 'name':
+            case 'email':
+            case 'company':
+            case 'title':
+            default:
+                setIsInputModalOpen(true);
+                break;
+        }
     };
 
     if (loading) return (
@@ -142,13 +179,25 @@ const RecipientSignPage = () => {
                 const x = (field.x_pct / 100) * 600;
                 const y = (field.y_pct / 100) * pageDimensions.height;
 
-                currentPdfBuffer = await embedSignature({
-                    pdfBuffer: currentPdfBuffer,
-                    signatureImage: signatureData,
-                    position: { x, y },
-                    pageIndex: field.page_number - 1,
-                    visualWidth: 600
-                });
+                if (field.type === 'signature' || field.type === 'initial' || field.type === 'stamp') {
+                    currentPdfBuffer = await embedSignature({
+                        pdfBuffer: currentPdfBuffer,
+                        signatureImage: signatureData,
+                        position: { x, y },
+                        pageIndex: field.page_number - 1,
+                        visualWidth: 600
+                    });
+                } else {
+                    // Embed Text (Date, Name, etc.)
+                    currentPdfBuffer = await embedText({
+                        pdfBuffer: currentPdfBuffer,
+                        text: signatureData,
+                        position: { x, y },
+                        pageIndex: field.page_number - 1,
+                        visualWidth: 600,
+                        fontSize: 12 // Default font size
+                    });
+                }
             }
 
             const blob = new Blob([currentPdfBuffer], { type: 'application/pdf' });
@@ -238,7 +287,10 @@ const RecipientSignPage = () => {
                                 return (
                                     <button
                                         key={idx}
-                                        onClick={() => setPageNumber(field.page_number)}
+                                        onClick={() => {
+                                            setPageNumber(field.page_number);
+                                            // Optional: highlight field or scroll to it
+                                        }}
                                         className={`
                                             group w-full text-left p-4 rounded-xl border transition-all duration-300 relative overflow-hidden
                                             ${isSigned
@@ -256,8 +308,8 @@ const RecipientSignPage = () => {
                                                 {isSigned ? <CheckCircle size={14} /> : <span className="text-xs font-bold">{idx + 1}</span>}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className={`text-sm font-semibold mb-0.5 transition-colors ${isSigned ? 'text-green-900' : 'text-[var(--template-text-primary)]'}`}>
-                                                    Signature Field
+                                                <div className={`text-sm font-semibold mb-0.5 transition-colors ${isSigned ? 'text-green-900' : 'text-[var(--template-text-primary)]'} truncate`}>
+                                                    {field.label || field.type || 'Field'}
                                                 </div>
                                                 <div className="text-xs text-[var(--template-text-light)]">Page {field.page_number}</div>
                                             </div>
@@ -290,25 +342,51 @@ const RecipientSignPage = () => {
                                     const left = (field.x_pct / 100) * 600;
                                     const top = (field.y_pct / 100) * pageDimensions.height;
 
+                                    // Determine styles based on type
+                                    const getStyle = () => {
+                                        switch (field.type) {
+                                            case 'signature':
+                                            case 'initial':
+                                            case 'stamp':
+                                                return { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-400', label: field.type === 'initial' ? 'Initial' : 'Sign' };
+                                            case 'date':
+                                                return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300', label: 'Date' };
+                                            case 'checkbox':
+                                                return { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-400', label: '' };
+                                            case 'text':
+                                                return { bg: 'bg-white', text: 'text-blue-800', border: 'border-blue-300', label: 'Text' };
+                                            default: // User info
+                                                return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: field.label || field.type };
+                                        }
+                                    };
+
+                                    const style = getStyle();
+                                    const boxWidth = field.type === 'checkbox' ? 40 : 120;
+                                    const boxHeight = field.type === 'checkbox' ? 40 : 50;
+
                                     if (isSigned) {
                                         return (
                                             <div
                                                 key={idx}
                                                 className="absolute group pointer-events-auto"
-                                                style={{ left, top, width: 120, height: 50, zIndex: 20 }}
+                                                style={{ left, top, width: boxWidth, height: boxHeight, zIndex: 20 }}
                                             >
-                                                <div className="w-full h-full border border-primary/50 bg-primary/5 p-1 rounded backdrop-blur-sm flex items-center justify-center">
-                                                    <img src={signedFields[field.id]} alt="Signature" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                                <div className={`w-full h-full border ${style.border} ${style.bg} p-1 rounded backdrop-blur-sm flex items-center justify-center`}>
+                                                    {/* For now, we assume everything saves as an image or text. If image, render img. If text, render text. */}
+                                                    {field.type === 'signature' || field.type === 'initial' || field.type === 'stamp' ? (
+                                                        <img src={signedFields[field.id]} alt="Signature" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                                    ) : (
+                                                        <span className={`font-medium ${style.text}`}>{signedFields[field.id]}</span>
+                                                    )}
                                                 </div>
 
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setActiveField(field);
-                                                        setIsSignatureModalOpen(true);
+                                                        handleFieldInteraction(field);
                                                     }}
                                                     className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full p-1.5 shadow-md hover:bg-primary/90 transition-transform hover:scale-105 z-30"
-                                                    title="Edit signature"
+                                                    title="Edit"
                                                 >
                                                     <Pencil size={14} />
                                                 </button>
@@ -319,16 +397,13 @@ const RecipientSignPage = () => {
                                     return (
                                         <button
                                             key={idx}
-                                            onClick={() => {
-                                                setActiveField(field);
-                                                setIsSignatureModalOpen(true);
-                                            }}
-                                            className="absolute bg-primary/10 border-2 border-primary text-primary font-bold py-2 px-4 rounded hover:scale-105 transition-transform hover:bg-primary/20 group pointer-events-auto"
-                                            style={{ left, top, width: 120, height: 50, zIndex: 20 }}
+                                            onClick={() => handleFieldInteraction(field)}
+                                            className={`absolute ${style.bg} border-2 ${style.border} ${style.text} font-bold py-2 px-2 rounded hover:scale-105 transition-transform group pointer-events-auto flex items-center justify-center`}
+                                            style={{ left, top, width: boxWidth, height: boxHeight, zIndex: 20 }}
                                         >
                                             <div className="flex items-center justify-center gap-1.5">
-                                                <PenTool size={14} />
-                                                <span className="text-xs uppercase tracking-wide">Sign</span>
+                                                {field.type !== 'checkbox' && <PenTool size={14} />}
+                                                <span className="text-xs uppercase tracking-wide truncate">{field.label || style.label}</span>
                                             </div>
                                         </button>
                                     );
@@ -345,8 +420,17 @@ const RecipientSignPage = () => {
                     onCancel={() => setIsSignatureModalOpen(false)}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
                     userId={userId}
+                    initialCategory={activeField?.type === 'initial' ? 'Initial' : 'Signature'}
                 />
             )}
+
+            <TextInputModal
+                isOpen={isInputModalOpen}
+                onClose={() => setIsInputModalOpen(false)}
+                onSave={handleInputSave}
+                label={activeField?.label || activeField?.type}
+                initialValue={activeField ? signedFields[activeField.id] : ''}
+            />
 
             {isSaving && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100]">

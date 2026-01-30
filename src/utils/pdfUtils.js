@@ -1,4 +1,4 @@
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 /**
  * Embeds a PNG signature into a PDF at specific coordinates.
@@ -120,4 +120,56 @@ export async function embedSignature({
 
     const savedBytes = await pdfDoc.save();
     return savedBytes;
+}
+
+/**
+ * Embeds text into a PDF at specific coordinates.
+ * @param {Object} params
+ * @param {ArrayBuffer|Uint8Array} params.pdfBuffer - The original PDF file buffer.
+ * @param {string} params.text - The text to embed.
+ * @param {Object} params.position - { x, y } coordinates from the UI (top-left origin).
+ * @param {number} params.pageIndex - The 0-based index of the page.
+ * @param {number} params.visualWidth - The rendered width of the PDF page in the UI.
+ * @param {number} params.fontSize - Optional font size (default 12).
+ * @returns {Promise<Uint8Array>}
+ */
+export async function embedText({
+    pdfBuffer,
+    text,
+    position,
+    pageIndex,
+    visualWidth,
+    fontSize = 12
+}) {
+    const pdfBytes = new Uint8Array(pdfBuffer);
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    const pages = pdfDoc.getPages();
+    if (pageIndex < 0 || pageIndex >= pages.length) return await pdfDoc.save();
+    const page = pages[pageIndex];
+
+    const { width, height } = page.getSize();
+    
+    // Simplified scaling logic matching embedSignature
+    const safeVisualWidth = visualWidth || 600;
+    const scale = width / safeVisualWidth;
+
+    const scaledX = position.x * scale;
+    const scaledY = position.y * scale;
+
+    // Adjust Y because PDF is bottom-left origin. 
+    // visual Y is top-left.
+    // Text draws from bottom-left of the text box.
+    const pdfDrawY = height - scaledY - (fontSize * scale); 
+
+    page.drawText(text, {
+        x: scaledX,
+        y: pdfDrawY,
+        size: fontSize * scale,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+    });
+
+    return await pdfDoc.save();
 }

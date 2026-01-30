@@ -125,7 +125,9 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="text-lg font-semibold text-gray-900">Sign Document</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        {initialCategory === 'Initial' ? 'Adopt Your Initials' : 'Sign Document'}
+                    </h3>
                     <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 text-gray-500">
                         <X size={20} />
                     </Button>
@@ -145,7 +147,7 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
                             className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'saved' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                         >
                             <LayoutGrid size={16} />
-                            Saved Signatures
+                            Saved {initialCategory === 'Initial' ? 'Initials' : 'Signatures'}
                         </button>
                     </div>
                 )}
@@ -163,7 +165,7 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
                                     }}
                                 />
                                 <div className="absolute top-2 left-2 text-xs text-gray-400 pointer-events-none select-none group-hover:text-primary">
-                                    Sign here
+                                    {initialCategory === 'Initial' ? 'Draw initials here' : 'Sign here'}
                                 </div>
                             </div>
 
