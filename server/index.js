@@ -67,19 +67,31 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     process.env.SUPABASE_SERVICE_ROLE_KEY
                 );
 
-                // IDEMPOTENCY CHECK: Check if event already processed
-                const { data: existingEvent, error: existingEventError } = await supabase
+                // IDEMPOTENCY CHECK (DB-Level): distinct 'stripe_event_id'
+                // We attempt to insert first. If it violates uniqueness, we know it's a duplicate.
+                const { error: insertError } = await supabase
                     .from('payment_events')
-                    .select('id')
-                    .eq('stripe_event_id', event.id)
-                    .single();
+                    .insert({
+                        stripe_event_id: event.id,
+                        type: event.type,
+                        status: paymentIntent.status,
+                        payload: event,
+                        user_id: userId
+                    });
 
-                if (existingEvent) {
-                    log(`Event ${event.id} already processed. Skipping.`);
-                    return res.send();
+                if (insertError) {
+                    if (insertError.code === '23505') {
+                        // unique violation -> already processed
+                        log(`Event ${event.id} already processed (DB-level, 23505). Skipping.`);
+                        return res.status(200).send();
+                    }
+                    // Some other error? Throw it.
+                    throw insertError;
                 }
 
-                // Log into payments table (Customer History) - Check existence first
+                log('Payment event captured (Idempotency Lock secured).');
+
+                // Log into payments table (Customer History)
                 const { data: existingPayment } = await supabase
                     .from('payments')
                     .select('id')
@@ -99,7 +111,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
                     if (paymentError) {
                         logError('Error logging payment history:', paymentError);
-                        // We continue even if history log fails, but it's not ideal.
                     } else {
                         log('Payment history saved.');
                     }
@@ -112,35 +123,47 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     .upsert({
                         id: userId,
                         subscription_status: 'pro',
-                        email: paymentIntent.receipt_email, // Update email from payment intent
+                        email: paymentIntent.receipt_email,
                         updated_at: new Date().toISOString()
                     });
 
                 if (error) {
                     logError('Error updating Supabase:', error);
+                    // If profile update fails, we should still try to release the lock
+                    await supabase.from('payment_locks')
+                        .update({ status: 'failed' }) // Mark as failed because profile update didn't complete
+                        .eq('user_id', userId)
+                        .eq('payment_intent_id', paymentIntent.id);
                     return res.status(500).json({ error: 'Database update failed' });
                 }
                 log(`User ${userId} upgraded to pro.`);
 
-                // Log payment event (Mark as processed)
-                const { error: eventError } = await supabase
-                    .from('payment_events')
-                    .insert({
-                        stripe_event_id: event.id,
-                        type: event.type,
-                        status: paymentIntent.status,
-                        payload: event,
-                        user_id: userId
-                    });
+                // RELEASE LOCK (Success)
+                await supabase.from('payment_locks')
+                    .update({ status: 'succeeded' })
+                    .eq('user_id', userId)
+                    .eq('payment_intent_id', paymentIntent.id);
 
-                if (eventError) {
-                    logError('Error logging payment event:', eventError);
-                } else {
-                    log('Payment event logged successfully.');
-                }
 
             } catch (dbError) {
                 logError('Supabase Client Error:', dbError);
+                // In case of any DB error during processing, attempt to mark the lock as failed
+                // This assumes userId is available from paymentIntent.metadata
+                if (userId && paymentIntent && paymentIntent.id) {
+                    try {
+                        const supabase = createClient(
+                            process.env.VITE_SUPABASE_URL,
+                            process.env.SUPABASE_SERVICE_ROLE_KEY
+                        );
+                        await supabase.from('payment_locks')
+                            .update({ status: 'failed' })
+                            .eq('user_id', userId)
+                            .eq('payment_intent_id', paymentIntent.id);
+                        log(`Payment lock for user ${userId} marked as failed due to DB error.`);
+                    } catch (lockUpdateError) {
+                        logError('Failed to update payment lock status to failed after DB error:', lockUpdateError);
+                    }
+                }
                 return res.status(500).json({ error: 'Database connection failed' });
             }
         }
@@ -152,47 +175,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 // JSON parser for other routes
 app.use(express.json());
 
-app.post('/verify-payment', async (req, res) => {
-    try {
-        const stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
-        const { paymentIntentId } = req.body;
 
-        if (!paymentIntentId) {
-            return res.status(400).json({ error: 'Missing paymentIntentId' });
-        }
-
-        const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId);
-
-        if (paymentIntent.status === 'succeeded') {
-            const userId = paymentIntent.metadata.userId;
-
-            if (userId) {
-                const supabase = createClient(
-                    process.env.VITE_SUPABASE_URL,
-                    process.env.SUPABASE_SERVICE_ROLE_KEY
-                );
-
-                const { error } = await supabase
-                    .from('profiles')
-                    .upsert({
-                        id: userId,
-                        email: paymentIntent.receipt_email || undefined, // Optional
-                        subscription_status: 'pro',
-                        updated_at: new Date().toISOString()
-                    });
-
-                if (error) throw error;
-
-                return res.json({ success: true, message: 'User upgraded to pro' });
-            }
-        }
-
-        res.json({ success: false, status: paymentIntent.status });
-    } catch (error) {
-        logError('Error verifying payment:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
 
 app.post('/create-payment-intent', async (req, res) => {
     try {
@@ -208,17 +191,141 @@ app.post('/create-payment-intent', async (req, res) => {
             return res.status(400).json({ error: 'Missing userId' });
         }
 
-        const paymentIntent = await stripeClient.paymentIntents.create({
-            amount,
-            currency,
-            automatic_payment_methods: { enabled: true },
-            receipt_email: email, // Store email in Stripe
-            metadata: { userId },
-        });
+        const supabase = createClient(
+            process.env.VITE_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
 
-        res.send({
-            clientSecret: paymentIntent.client_secret,
-        });
+        // 0. CHECK PROFILE: Ensure user isn't already PRO
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_status')
+            .eq('id', userId)
+            .single();
+
+        if (profile && profile.subscription_status === 'pro') {
+            return res.status(400).json({ error: 'User is already subscribed' });
+        }
+
+        // 1. ACQUIRE LOCK (Atomically)
+        // We attempt to insert a 'pending' lock first. 
+        // If a lock exists (PK violation on user_id), this will fail, preventing race conditions.
+
+        // 1. ACQUIRE LOCK (Atomically)
+        log(`[Lock] Attempting to acquire lock for user ${userId}...`);
+        let lockAcquired = false;
+
+        const { error: insertError } = await supabase
+            .from('payment_locks')
+            .insert({
+                user_id: userId,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            });
+
+        if (insertError) {
+            log(`[Lock] Insert failed: ${insertError.code} - ${insertError.message}`);
+            // Check if it's a PK violation (code 23505)
+            if (insertError.code === '23505') {
+                // Check if existing lock is stale
+                const { data: staleLock } = await supabase
+                    .from('payment_locks')
+                    .select('created_at')
+                    .eq('user_id', userId)
+                    .single();
+
+                if (staleLock) {
+                    const lockTime = new Date(staleLock.created_at).getTime();
+                    const now = new Date().getTime();
+                    const lockDuration = 60 * 1000; // 1 minute
+
+                    if (now - lockTime > lockDuration) {
+                        log(`[Lock] Expiring stale lock for user ${userId} (older than 1 minute)`);
+                        await supabase.from('payment_locks').delete().eq('user_id', userId);
+
+                        // AUTO-RETRY: Attempt to acquire lock again immediately
+                        log(`[Lock] Retrying lock acquisition for user ${userId}...`);
+                        const { error: retryError } = await supabase
+                            .from('payment_locks')
+                            .insert({
+                                user_id: userId,
+                                status: 'pending',
+                                created_at: new Date().toISOString()
+                            });
+
+                        if (retryError) {
+                            log(`[Lock] Retry failed: ${retryError.message}`);
+                            return res.status(409).json({ error: 'Payment already in progress (retry failed).' });
+                        }
+
+                        // Retry success!
+                        log(`[Lock] Acquired on retry for user ${userId}`);
+                        lockAcquired = true;
+                        // Proceed to Stripe creation below...
+                    } else {
+                        // Not stale yet
+                        log(`[Lock] Blocked concurrent request for user ${userId}`);
+                        return res.status(409).json({
+                            error: 'Payment already in progress. Please complete existing session.'
+                        });
+                    }
+                } else {
+                    // No stale lock found (maybe deleted by race condition), but insert failed previously.
+                    // Treating as conflict.
+                    return res.status(409).json({
+                        error: 'Payment already in progress.'
+                    });
+                }
+            } else {
+                throw insertError;
+            }
+        } else {
+            // First attempt success
+            lockAcquired = true;
+            log(`[Lock] Acquired for user ${userId}`);
+        }
+
+        try {
+            // 2. CREATE INTENT
+            const idempotencyKey = `pi_lock_${userId}_${Date.now()}`;
+            log(`[Stripe] Creating intent with key ${idempotencyKey}...`);
+
+            const paymentIntent = await stripeClient.paymentIntents.create({
+                amount,
+                currency,
+                automatic_payment_methods: { enabled: true },
+                receipt_email: email,
+                metadata: { userId },
+            }, {
+                idempotencyKey
+            });
+            log(`[Stripe] Intent created: ${paymentIntent.id}`);
+
+            // 3. UPDATE LOCK with Intent ID
+            log(`[Lock] Updating lock with intent ID...`);
+            const { error: updateError } = await supabase
+                .from('payment_locks')
+                .update({ payment_intent_id: paymentIntent.id })
+                .eq('user_id', userId);
+
+            if (updateError) {
+                log(`[Lock] Update failed: ${updateError.message}`);
+                throw updateError;
+            }
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+
+        } catch (error) {
+            logError(`[Lock] Critical error in flow:`, error);
+            // Rollback lock if Stripe fails
+            if (lockAcquired) {
+                log(`[Lock] Rolling back lock for user ${userId}`);
+                await supabase.from('payment_locks').delete().eq('user_id', userId);
+            }
+            throw error;
+        }
     } catch (error) {
         logError('Error creating payment intent:', error);
         res.status(500).json({ error: error.message });

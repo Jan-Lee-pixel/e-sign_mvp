@@ -30,8 +30,8 @@ const DashboardPage = ({ session }) => {
         const paymentSuccess = query.get('payment_success');
         const paymentIntent = query.get('payment_intent');
 
-        if (paymentSuccess && paymentIntent) {
-            verifyPayment(paymentIntent);
+        if (paymentSuccess) {
+            pollSubscriptionStatus();
         }
 
         fetchEnvelopes();
@@ -54,26 +54,37 @@ const DashboardPage = ({ session }) => {
         }
     };
 
-    const verifyPayment = async (paymentIntentId) => {
-        try {
-            setLoading(true);
-            const response = await fetch('http://localhost:4242/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentIntentId }),
-            });
-            const data = await response.json();
+    const pollSubscriptionStatus = async () => {
+        setLoading(true);
+        const maxAttempts = 10;
+        let attempts = 0;
 
-            if (data.success) {
+        const check = async () => {
+            const { data } = await supabase
+                .from('profiles')
+                .select('subscription_status')
+                .eq('id', session.user.id)
+                .single();
+
+            if (data?.subscription_status === 'pro') {
+                setIsPro(true);
                 setAlertModal({ isOpen: true, title: "Success!", message: "Your subscription has been activated.", type: "success" });
                 // Clean URL
                 window.history.replaceState({}, document.title, window.location.pathname);
+                setLoading(false);
+                return;
             }
-        } catch (error) {
-            console.error("Payment verification failed:", error);
-        } finally {
-            setLoading(false);
-        }
+
+            attempts++;
+            if (attempts < maxAttempts) {
+                setTimeout(check, 2000); // Poll every 2 seconds
+            } else {
+                setLoading(false);
+                setAlertModal({ isOpen: true, title: "Processing", message: "Your payment is being processed. Your status will update shortly.", type: "info" });
+            }
+        };
+
+        check();
     };
 
     const fetchEnvelopes = async () => {
