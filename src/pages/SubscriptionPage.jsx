@@ -8,7 +8,7 @@ export default function SubscriptionPage() {
     const [isPro, setIsPro] = useState(false); // Assume false initially, though only Pros can reach here ideally
     const [error, setError] = useState(null);
 
-    const [payments, setPayments] = useState([]);
+    const [showCancelModal, setShowCancelModal] = useState(false);
 
     useEffect(() => {
         checkStatus();
@@ -51,13 +51,10 @@ export default function SubscriptionPage() {
         }
     };
 
-    const handleCancel = async () => {
-        if (!window.confirm("Are you sure you want to cancel your Pro subscription? You will lose access to premium features immediately.")) {
-            return;
-        }
-
+    const confirmCancel = async () => {
         setLoading(true);
         setError(null);
+        setShowCancelModal(false);
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -90,7 +87,34 @@ export default function SubscriptionPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
+        <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center relative">
+            {showCancelModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-[var(--template-border)] animate-[scaleIn_0.2s_ease-out]">
+                        <h4 className="text-xl font-['Crimson_Pro'] font-bold text-gray-900 mb-4">
+                            Cancel Subscription?
+                        </h4>
+                        <p className="text-gray-600 mb-8 leading-relaxed">
+                            Are you sure you want to cancel your Pro subscription? You will lose access to premium features immediately.
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                            >
+                                Keep Subscription
+                            </button>
+                            <button
+                                onClick={confirmCancel}
+                                className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                            >
+                                Yes, Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-4xl w-full bg-white rounded-2xl shadow-[var(--template-shadow-lg)] overflow-hidden border border-[var(--template-border)] animate-[scaleIn_0.5s_ease-out]">
                 <div className="px-8 py-10">
                     <h3 className="text-center text-3xl font-['Crimson_Pro'] font-semibold text-[var(--template-text-primary)] mb-6">Subscription Management</h3>
@@ -112,7 +136,7 @@ export default function SubscriptionPage() {
                             </p>
 
                             <button
-                                onClick={handleCancel}
+                                onClick={() => setShowCancelModal(true)}
                                 disabled={loading}
                                 className="w-full max-w-sm bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 rounded-xl py-3 px-6 font-semibold transition-all shadow-sm"
                             >
