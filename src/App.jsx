@@ -8,12 +8,9 @@ import RecipientSignPage from './pages/RecipientSignPage';
 import DashboardPage from './pages/DashboardPage';
 import PricingPage from './pages/PricingPage';
 import MySignaturesPage from './pages/MySignaturesPage';
-<<<<<<< HEAD
 import SubscriptionPage from './pages/SubscriptionPage';
 import UnifiedStartPage from './pages/UnifiedStartPage';
-=======
 import AIAssistantPage from './pages/AIAssistantPage';
->>>>>>> dev-ai-integration
 import './App.css';
 
 function App() {
@@ -69,16 +66,14 @@ function App() {
                 <Route path="/my-signatures" element={
                     !session ? <Navigate to="/login" /> : <MySignaturesPage />
                 } />
-<<<<<<< HEAD
                 <Route path="/subscription" element={
                     !session ? <Navigate to="/login" /> : <SubscriptionPage />
                 } />
                 <Route path="/start" element={
                     !session ? <Navigate to="/login" /> : <UnifiedStartPage />
-=======
+                } />
                 <Route path="/tools/ai-assistant" element={
                     !session ? <Navigate to="/login" /> : <AIAssistantPage session={session} />
->>>>>>> dev-ai-integration
                 } />
 
                 {/* Fallback */}

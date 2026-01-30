@@ -4,10 +4,14 @@ import { supabase } from '../lib/supabase';
 import PDFViewer from '../components/PDFViewer';
 import SignaturePad from '../components/SignaturePad';
 import { embedSignature, embedText } from '../utils/pdfUtils';
-import { PenTool, CheckCircle, AlertTriangle, ArrowLeft, Loader2, Info, Pencil, CheckSquare } from 'lucide-react';
+import { PenTool, CheckCircle, AlertTriangle, ArrowLeft, Loader2, Info, Pencil, CheckSquare, Sparkles, X } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import TextInputModal from '../components/TextInputModal';
 import { Button } from '../components/ui/Button';
+import { secureAiService } from '../services/secureAiService';
+import ReactMarkdown from 'react-markdown';
+import Draggable from 'react-draggable';
+
 
 const RecipientSignPage = () => {
     const { token } = useParams();
@@ -18,6 +22,10 @@ const RecipientSignPage = () => {
     const [pdfBuffer, setPdfBuffer] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageDimensions, setPageDimensions] = useState(null);
+    const [aiSummary, setAiSummary] = useState(null);
+    const [isSummarizing, setIsSummarizing] = useState(false);
+    const [showSummary, setShowSummary] = useState(false);
+    const draggableRef = React.useRef(null);
 
     // Signing state
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
@@ -67,6 +75,31 @@ const RecipientSignPage = () => {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSummarize = async () => {
+        if (!pdfBuffer) return;
+
+        // If we already have a summary, just show it
+        if (aiSummary) {
+            setShowSummary(true);
+            return;
+        }
+
+        setIsSummarizing(true);
+        setShowSummary(true); // Open the window so they see the loading state
+
+        try {
+            const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+            const summary = await secureAiService.analyzeDocument(blob);
+            setAiSummary(summary);
+        } catch (err) {
+            console.error("AI Summary Error:", err);
+            setAlertModal({ isOpen: true, title: "AI Error", message: "Failed to generate summary.", type: "error" });
+            setShowSummary(false); // Close on error
+        } finally {
+            setIsSummarizing(false);
         }
     };
 
@@ -281,6 +314,28 @@ const RecipientSignPage = () => {
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar */}
                 <aside className="w-80 bg-white/60 backdrop-blur-md border-r border-[var(--template-border)] flex flex-col shrink-0 overflow-y-auto shadow-[var(--template-shadow-sm)] relative z-20">
+                    <div className="p-6 border-b border-[var(--template-border)] bg-[var(--template-bg-secondary)]/30">
+                        <h2 className="text-xs font-bold text-[var(--template-primary)] uppercase tracking-widest font-['Crimson_Pro'] mb-3">Document Summary</h2>
+
+                        <div className="space-y-4">
+                            {/* AI Summary Section */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-[10px] uppercase tracking-wider text-[var(--template-text-light)] font-bold">Content Summary</label>
+                                    <button
+                                        onClick={handleSummarize}
+                                        className="text-[10px] flex items-center gap-1 text-[var(--template-primary)] hover:underline font-bold bg-[var(--template-primary)]/5 hover:bg-[var(--template-primary)]/10 px-2 py-1 rounded-full transition-colors"
+                                    >
+                                        <Sparkles size={10} /> {aiSummary ? 'Show Summary' : 'AI Summarize'}
+                                    </button>
+                                </div>
+                                <p className="text-xs text-[var(--template-text-light)] italic">
+                                    Click to view a concise summary of this document.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="p-6 border-b border-[var(--template-border)]">
                         <h2 className="text-xs font-bold text-[var(--template-primary)] uppercase tracking-widest font-['Crimson_Pro']">Required Fields</h2>
                         <p className="text-xs text-[var(--template-text-light)] mt-2">Click a field below to jump to it.</p>
@@ -449,6 +504,54 @@ const RecipientSignPage = () => {
                         <p className="text-gray-900 font-medium">Finalizing document...</p>
                     </div>
                 </div>
+            )}
+            {/* Floating AI Summary Window */}
+            {showSummary && (
+                <Draggable bounds="parent" handle=".handle" nodeRef={draggableRef}>
+                    <div ref={draggableRef} className="absolute top-20 right-20 z-50 w-80 bg-white/90 backdrop-blur-xl rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 ring-1 ring-black/5 animate-[scaleIn_0.2s_ease-out]">
+                        {/* Window Header */}
+                        <div className="handle flex items-center justify-between p-4 border-b border-black/5 cursor-move active:cursor-grabbing">
+                            <div className="flex items-center gap-2 text-[var(--template-primary)] font-bold font-['Crimson_Pro'] uppercase tracking-widest text-xs">
+                                <Sparkles size={14} />
+                                <span>AI Summary</span>
+                            </div>
+                            <button
+                                onClick={() => setShowSummary(false)}
+                                className="text-[var(--template-text-light)] hover:text-[var(--template-text-primary)] hover:bg-black/5 rounded-full p-1 transition-colors"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Window Content */}
+                        <div className="p-4 max-h-[60vh] overflow-y-auto">
+                            {isSummarizing ? (
+                                <div className="flex flex-col items-center justify-center py-8 gap-3 text-[var(--template-text-light)] animate-pulse">
+                                    <Sparkles size={24} className="text-[var(--template-primary)]" />
+                                    <span className="text-xs">Analyzing document...</span>
+                                </div>
+                            ) : (
+                                <div className="text-sm text-[var(--template-text-secondary)] leading-relaxed prose prose-sm prose-p:my-2 prose-headings:my-2 prose-strong:text-[var(--template-primary-dark)]">
+                                    <ReactMarkdown>
+                                        {aiSummary}
+                                    </ReactMarkdown>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Window Footer */}
+                        {!isSummarizing && aiSummary && (
+                            <div className="p-3 bg-[var(--template-bg-secondary)]/50 border-t border-black/5 rounded-b-xl flex justify-end">
+                                <button
+                                    onClick={handleSummarize}
+                                    className="text-[10px] text-[var(--template-text-light)] hover:text-[var(--template-primary)] flex items-center gap-1 transition-colors"
+                                >
+                                    <Sparkles size={10} /> Regenerate
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </Draggable>
             )}
 
             <AlertModal
