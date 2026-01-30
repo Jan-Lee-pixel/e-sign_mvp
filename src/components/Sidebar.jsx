@@ -12,7 +12,6 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     ];
 
     const toolItems = [
-        { id: 'self-sign', label: 'Self Sign', icon: '✒️', path: '/self-sign' },
         { id: 'ai-assistant', label: 'AI Assistant', icon: '✨', path: '/tools/ai-assistant' },
     ];
 
