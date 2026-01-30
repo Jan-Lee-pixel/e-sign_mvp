@@ -60,7 +60,9 @@ const ComposePage = () => {
                 id: pf.id || crypto.randomUUID(),
                 page: pf.page_number,
                 x: (pf.x_pct / 100) * pageDimensions.width,
-                y: (pf.y_pct / 100) * pageDimensions.height
+                y: (pf.y_pct / 100) * pageDimensions.height,
+                width: pf.width ? (pf.width / 100) * pageDimensions.width : null,
+                height: pf.height ? (pf.height / 100) * pageDimensions.height : null
             }));
 
             setFields(hydratedFields);
@@ -133,7 +135,9 @@ const ComposePage = () => {
                 id: pf.id || crypto.randomUUID(),
                 page: pf.page_number,
                 x: (pf.x_pct / 100) * 600,
-                y: (pf.y_pct / 100) * renderedHeight
+                y: (pf.y_pct / 100) * renderedHeight,
+                width: pf.width ? (pf.width / 100) * 600 : null,
+                height: pf.height ? (pf.height / 100) * renderedHeight : null
             }));
             setFields(hydratedFields);
             setPendingFields(null);
@@ -156,6 +160,10 @@ const ComposePage = () => {
 
     const updateFieldPosition = (id, newPos) => {
         setFields(fields.map(f => f.id === id ? { ...f, x: newPos.x, y: newPos.y } : f));
+    };
+
+    const updateFieldSize = (id, newSize) => {
+        setFields(fields.map(f => f.id === id ? { ...f, width: newSize.width, height: newSize.height } : f));
     };
 
     const removeField = (id) => {
@@ -231,6 +239,8 @@ const ComposePage = () => {
                     page_number: f.page,
                     x_pct: (f.x / pageDimensions.width) * 100,
                     y_pct: (f.y / pageDimensions.height) * 100,
+                    width: f.width ? (f.width / pageDimensions.width) * 100 : null,
+                    height: f.height ? (f.height / pageDimensions.height) * 100 : null,
                     type: f.type,
                     label: f.label
                 }));
@@ -279,6 +289,8 @@ const ComposePage = () => {
                     page_number: f.page,
                     x_pct: (f.x / pageDimensions.width) * 100,
                     y_pct: (f.y / pageDimensions.height) * 100,
+                    width: f.width ? (f.width / pageDimensions.width) * 100 : null,
+                    height: f.height ? (f.height / pageDimensions.height) * 100 : null,
                     type: f.type,
                     label: f.label
                 }));
@@ -468,6 +480,8 @@ const ComposePage = () => {
                                             <DraggablePlaceholder
                                                 initialPosition={{ x: field.x, y: field.y }}
                                                 onPositionChange={(pos) => updateFieldPosition(field.id, pos)}
+                                                onResize={(size) => updateFieldSize(field.id, size)}
+                                                initialSize={field.width ? { width: field.width, height: field.height } : null}
                                                 containerDimensions={pageDimensions}
                                                 type={field.type}
                                                 label={field.label}

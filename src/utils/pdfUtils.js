@@ -15,9 +15,6 @@ export async function embedSignature({
     signatureImage,
     position,
     pageIndex,
-    signatureImage,
-    position,
-    pageIndex,
     visualWidth,
     ...params // Allow extra params like width/height
 }) {

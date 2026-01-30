@@ -178,12 +178,16 @@ const RecipientSignPage = () => {
 
                 const x = (field.x_pct / 100) * 600;
                 const y = (field.y_pct / 100) * pageDimensions.height;
+                const width = field.width ? (field.width / 100) * 600 : null;
+                const height = field.height ? (field.height / 100) * pageDimensions.height : null;
 
                 if (field.type === 'signature' || field.type === 'initial' || field.type === 'stamp') {
                     currentPdfBuffer = await embedSignature({
                         pdfBuffer: currentPdfBuffer,
                         signatureImage: signatureData,
                         position: { x, y },
+                        width,
+                        height,
                         pageIndex: field.page_number - 1,
                         visualWidth: 600
                     });
@@ -193,9 +197,11 @@ const RecipientSignPage = () => {
                         pdfBuffer: currentPdfBuffer,
                         text: signatureData,
                         position: { x, y },
+                        width,
+                        height,
                         pageIndex: field.page_number - 1,
                         visualWidth: 600,
-                        fontSize: 12 // Default font size
+                        fontSize: height ? Math.max(10, height * 0.5) : 12
                     });
                 }
             }
@@ -361,8 +367,8 @@ const RecipientSignPage = () => {
                                     };
 
                                     const style = getStyle();
-                                    const boxWidth = field.type === 'checkbox' ? 40 : 120;
-                                    const boxHeight = field.type === 'checkbox' ? 40 : 50;
+                                    const boxWidth = field.width ? (field.width / 100) * 600 : (field.type === 'checkbox' ? 40 : 120);
+                                    const boxHeight = field.height ? (field.height / 100) * pageDimensions.height : (field.type === 'checkbox' ? 40 : 50);
 
                                     if (isSigned) {
                                         return (
