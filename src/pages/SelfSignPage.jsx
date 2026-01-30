@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PDFUploader from '../components/PDFUploader';
 import PDFViewer from '../components/PDFViewer';
 import SignaturePad from '../components/SignaturePad';
@@ -15,10 +15,20 @@ import { Button } from '../components/ui/Button';
 
 function SelfSignPage({ session }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [pdfFile, setPdfFile] = useState(null);
     const [pdfBuffer, setPdfBuffer] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageDimensions, setPageDimensions] = useState(null);
+
+    useEffect(() => {
+        if (location.state?.fileBuffer) {
+            handleUpload(location.state.fileBuffer);
+            // Clear state to prevent reloading on simple refesh if desirable, 
+            // though keeping it might be safer for now.
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const handlePageLoad = (page) => {
         const originalWidth = page.originalWidth;

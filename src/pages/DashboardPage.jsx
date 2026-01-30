@@ -194,7 +194,7 @@ const DashboardPage = ({ session }) => {
                                 <h1 className="font-['Calistoga'] text-4xl font-bold tracking-wide text-[#1A1A1A]">Dashboard</h1>
                             </div>
                             <button
-                                onClick={() => navigate('/compose')}
+                                onClick={() => navigate('/start')}
                                 className="bg-[#F9A602] hover:bg-[#e09602] text-white px-8 py-4 border-none rounded-xl font-semibold cursor-pointer text-base shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:-translate-y-1"
                             >
                                 <span className="text-xl">+</span> Upload Document

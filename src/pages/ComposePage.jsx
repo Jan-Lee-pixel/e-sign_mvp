@@ -42,6 +42,10 @@ const ComposePage = () => {
     useEffect(() => {
         if (location.state?.envelope) {
             initializeEditMode(location.state.envelope);
+        } else if (location.state?.fileBuffer) {
+            handleUpload(location.state.fileBuffer, location.state.fileName);
+            // Clear state
+            window.history.replaceState({}, document.title);
         }
     }, [location.state]);
 
