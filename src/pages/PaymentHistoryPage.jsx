@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import PaymentHistoryTable from '../components/PaymentHistoryTable';
+import PaymentDetailsModal from '../components/PaymentDetailsModal';
 import { useNavigate } from 'react-router-dom';
 
 export default function PaymentHistoryPage() {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedPayment, setSelectedPayment] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -32,6 +34,11 @@ export default function PaymentHistoryPage() {
 
     return (
         <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] py-12 px-4 sm:px-6 lg:px-8">
+            <PaymentDetailsModal
+                payment={selectedPayment}
+                onClose={() => setSelectedPayment(null)}
+            />
+
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8 flex items-center justify-between">
                     <div>
@@ -54,7 +61,10 @@ export default function PaymentHistoryPage() {
                     {loading ? (
                         <div className="text-center py-8">Loading history...</div>
                     ) : (
-                        <PaymentHistoryTable payments={payments} />
+                        <PaymentHistoryTable
+                            payments={payments}
+                            onSelectPayment={setSelectedPayment}
+                        />
                     )}
                 </div>
             </div>

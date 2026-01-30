@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PaymentHistoryTable = ({ payments }) => {
+const PaymentHistoryTable = ({ payments, onSelectPayment }) => {
     if (payments.length === 0) {
         return <p className="text-[var(--template-text-light)] text-center italic">No payment history found.</p>;
     }
@@ -17,7 +17,11 @@ const PaymentHistoryTable = ({ payments }) => {
                 </thead>
                 <tbody>
                     {payments.map((payment) => (
-                        <tr key={payment.id} className="border-b last:border-0 border-[var(--template-border)] hover:bg-slate-50 transition-colors">
+                        <tr
+                            key={payment.id}
+                            onClick={() => onSelectPayment && onSelectPayment(payment)}
+                            className={`border-b last:border-0 border-[var(--template-border)] hover:bg-slate-50 transition-colors ${onSelectPayment ? 'cursor-pointer' : ''}`}
+                        >
                             <td className="py-4 text-[var(--template-text-primary)]">
                                 {new Date(payment.created_at).toLocaleDateString(undefined, {
                                     year: 'numeric',
