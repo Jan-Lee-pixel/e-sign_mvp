@@ -21,8 +21,17 @@ export async function embedSignature({
     const pdfBytes = new Uint8Array(pdfBuffer);
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
-    // Embed the PNG signature
-    const pngImage = await pdfDoc.embedPng(signatureImage);
+    // Detect image type
+    let image;
+    if (signatureImage.startsWith('data:image/jpeg') || signatureImage.startsWith('data:image/jpg')) {
+        image = await pdfDoc.embedJpg(signatureImage);
+    } else {
+        // Default to PNG
+        image = await pdfDoc.embedPng(signatureImage);
+    }
+
+    // Rename variable for clarity
+    const embeddedImage = image;
 
     // Get the page
     const pages = pdfDoc.getPages();
@@ -62,7 +71,7 @@ export async function embedSignature({
 
     // Match UI height (50px)
     const uiSignatureHeight = 50;
-    const signatureDims = pngImage.scale(1);
+    const signatureDims = embeddedImage.scale(1);
     const aspectRatio = signatureDims.width / signatureDims.height;
 
     const pdfSignatureHeight = uiSignatureHeight * scale;
@@ -112,7 +121,7 @@ export async function embedSignature({
         drawOptions.rotate = { type: 'degrees', angle: imageRotation };
     }
 
-    page.drawImage(pngImage, drawOptions);
+    page.drawImage(embeddedImage, drawOptions);
 
 
 
@@ -150,7 +159,7 @@ export async function embedText({
     const page = pages[pageIndex];
 
     const { width, height } = page.getSize();
-    
+
     // Simplified scaling logic matching embedSignature
     const safeVisualWidth = visualWidth || 600;
     const scale = width / safeVisualWidth;
@@ -161,7 +170,7 @@ export async function embedText({
     // Adjust Y because PDF is bottom-left origin. 
     // visual Y is top-left.
     // Text draws from bottom-left of the text box.
-    const pdfDrawY = height - scaledY - (fontSize * scale); 
+    const pdfDrawY = height - scaledY - (fontSize * scale);
 
     page.drawText(text, {
         x: scaledX,
