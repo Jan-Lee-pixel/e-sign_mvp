@@ -67,7 +67,62 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     process.env.SUPABASE_SERVICE_ROLE_KEY
                 );
 
-                // Log payment event
+                // IDEMPOTENCY CHECK: Check if event already processed
+                const { data: existingEvent, error: existingEventError } = await supabase
+                    .from('payment_events')
+                    .select('id')
+                    .eq('stripe_event_id', event.id)
+                    .single();
+
+                if (existingEvent) {
+                    log(`Event ${event.id} already processed. Skipping.`);
+                    return res.send();
+                }
+
+                // Log into payments table (Customer History) - Check existence first
+                const { data: existingPayment } = await supabase
+                    .from('payments')
+                    .select('id')
+                    .eq('stripe_payment_id', paymentIntent.id)
+                    .single();
+
+                if (!existingPayment) {
+                    const { error: paymentError } = await supabase
+                        .from('payments')
+                        .insert({
+                            stripe_payment_id: paymentIntent.id,
+                            amount: paymentIntent.amount,
+                            currency: paymentIntent.currency,
+                            status: paymentIntent.status,
+                            user_id: userId
+                        });
+
+                    if (paymentError) {
+                        logError('Error logging payment history:', paymentError);
+                        // We continue even if history log fails, but it's not ideal.
+                    } else {
+                        log('Payment history saved.');
+                    }
+                } else {
+                    log(`Payment ${paymentIntent.id} already recorded. Skipping insert.`);
+                }
+
+                const { error } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: userId,
+                        subscription_status: 'pro',
+                        email: paymentIntent.receipt_email, // Update email from payment intent
+                        updated_at: new Date().toISOString()
+                    });
+
+                if (error) {
+                    logError('Error updating Supabase:', error);
+                    return res.status(500).json({ error: 'Database update failed' });
+                }
+                log(`User ${userId} upgraded to pro.`);
+
+                // Log payment event (Mark as processed)
                 const { error: eventError } = await supabase
                     .from('payment_events')
                     .insert({
@@ -84,38 +139,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     log('Payment event logged successfully.');
                 }
 
-                // Log into payments table (Customer History)
-                const { error: paymentError } = await supabase
-                    .from('payments')
-                    .insert({
-                        stripe_payment_id: paymentIntent.id,
-                        amount: paymentIntent.amount,
-                        currency: paymentIntent.currency,
-                        status: paymentIntent.status,
-                        user_id: userId
-                    });
-
-                if (paymentError) {
-                    logError('Error logging payment history:', paymentError);
-                } else {
-                    log('Payment history saved.');
-                }
-
-
-                const { error } = await supabase
-                    .from('profiles')
-                    .upsert({
-                        id: userId,
-                        subscription_status: 'pro',
-                        email: paymentIntent.receipt_email, // Update email from payment intent
-                        updated_at: new Date().toISOString()
-                    });
-
-                if (error) {
-                    logError('Error updating Supabase:', error);
-                    return res.status(500).json({ error: 'Database update failed' });
-                }
-                log(`User ${userId} upgraded to pro.`);
             } catch (dbError) {
                 logError('Supabase Client Error:', dbError);
                 return res.status(500).json({ error: 'Database connection failed' });
