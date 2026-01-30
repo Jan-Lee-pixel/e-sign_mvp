@@ -4,7 +4,33 @@ const cors = require('cors');
 const stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
+const logFile = path.join(__dirname, 'server.log');
+
+function log(message) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}\n`;
+    console.log(message);
+    try {
+        fs.appendFileSync(logFile, logMessage);
+    } catch (e) {
+        console.error("Failed to write to log file:", e);
+    }
+}
+
+function logError(message, error) {
+    const timestamp = new Date().toISOString();
+    const errorDetails = error ? (error.stack || JSON.stringify(error, null, 2)) : '';
+    const logMessage = `[${timestamp}] ERROR: ${message}\n${errorDetails}\n`;
+    console.error(message, error);
+    try {
+        fs.appendFileSync(logFile, logMessage);
+    } catch (e) {
+        console.error("Failed to write to log file:", e);
+    }
+}
 
 const app = express();
 const port = 4242;
@@ -23,7 +49,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     try {
         event = stripeClient.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
-        console.error(`Webhook Error: ${err.message}`);
+        logError(`Webhook Error: ${err.message}`, err);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -32,7 +58,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const paymentIntent = event.data.object;
         const userId = paymentIntent.metadata.userId;
 
-        console.log(`Payment succeeded for user: ${userId}`);
+        log(`Payment succeeded for user: ${userId}`);
 
         if (userId) {
             try {
@@ -53,9 +79,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     });
 
                 if (eventError) {
-                    console.error('Error logging payment event:', eventError);
+                    logError('Error logging payment event:', eventError);
                 } else {
-                    console.log('Payment event logged successfully.');
+                    log('Payment event logged successfully.');
                 }
 
                 // Log into payments table (Customer History)
@@ -70,27 +96,28 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     });
 
                 if (paymentError) {
-                    console.error('Error logging payment history:', paymentError);
+                    logError('Error logging payment history:', paymentError);
                 } else {
-                    console.log('Payment history saved.');
+                    log('Payment history saved.');
                 }
 
 
                 const { error } = await supabase
                     .from('profiles')
-                    .update({
+                    .upsert({
+                        id: userId,
                         subscription_status: 'pro',
+                        email: paymentIntent.receipt_email, // Update email from payment intent
                         updated_at: new Date().toISOString()
-                    })
-                    .eq('id', userId);
+                    });
 
                 if (error) {
-                    console.error('Error updating Supabase:', error);
+                    logError('Error updating Supabase:', error);
                     return res.status(500).json({ error: 'Database update failed' });
                 }
-                console.log(`User ${userId} upgraded to pro.`);
+                log(`User ${userId} upgraded to pro.`);
             } catch (dbError) {
-                console.error('Supabase Client Error:', dbError);
+                logError('Supabase Client Error:', dbError);
                 return res.status(500).json({ error: 'Database connection failed' });
             }
         }
@@ -139,7 +166,7 @@ app.post('/verify-payment', async (req, res) => {
 
         res.json({ success: false, status: paymentIntent.status });
     } catch (error) {
-        console.error('Error verifying payment:', error);
+        logError('Error verifying payment:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -147,7 +174,7 @@ app.post('/verify-payment', async (req, res) => {
 app.post('/create-payment-intent', async (req, res) => {
     try {
         const stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
-        const { userId } = req.body;
+        const { userId, email } = req.body;
 
         // SECURITY: Hardcode amount to $20.00 (2000 cents)
         // Do NOT trust the client to send the amount.
@@ -162,6 +189,7 @@ app.post('/create-payment-intent', async (req, res) => {
             amount,
             currency,
             automatic_payment_methods: { enabled: true },
+            receipt_email: email, // Store email in Stripe
             metadata: { userId },
         });
 
@@ -169,7 +197,7 @@ app.post('/create-payment-intent', async (req, res) => {
             clientSecret: paymentIntent.client_secret,
         });
     } catch (error) {
-        console.error('Error creating payment intent:', error);
+        logError('Error creating payment intent:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -196,19 +224,19 @@ app.post('/cancel-subscription', async (req, res) => {
             .eq('id', userId);
 
         if (error) {
-            console.error('Error cancelling subscription:', error);
+            logError('Error cancelling subscription:', error);
             return res.status(500).json({ error: 'Database update failed' });
         }
 
-        console.log(`User ${userId} cancelled subscription (downgraded to free).`);
+        log(`User ${userId} cancelled subscription (downgraded to free).`);
         res.json({ success: true, message: 'Subscription cancelled' });
 
     } catch (error) {
-        console.error('Error in cancel-subscription:', error);
+        logError('Error in cancel-subscription:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    log(`Server running on http://localhost:${port}`);
 });
