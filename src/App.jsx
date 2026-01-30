@@ -10,7 +10,7 @@ import PricingPage from './pages/PricingPage';
 import MySignaturesPage from './pages/MySignaturesPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import UnifiedStartPage from './pages/UnifiedStartPage';
-import AIAssistantPage from './pages/AIAssistantPage';
+import PaymentHistoryPage from './pages/PaymentHistoryPage';
 import './App.css';
 
 function App() {
@@ -72,8 +72,8 @@ function App() {
                 <Route path="/start" element={
                     !session ? <Navigate to="/login" /> : <UnifiedStartPage />
                 } />
-                <Route path="/tools/ai-assistant" element={
-                    !session ? <Navigate to="/login" /> : <AIAssistantPage session={session} />
+                <Route path="/history" element={
+                    !session ? <Navigate to="/login" /> : <PaymentHistoryPage />
                 } />
 
                 {/* Fallback */}

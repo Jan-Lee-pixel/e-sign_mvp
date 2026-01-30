@@ -12,7 +12,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     ];
 
     const toolItems = [
-        { id: 'ai-assistant', label: 'AI Assistant', icon: '✨', path: '/tools/ai-assistant' },
+        { id: 'payment-history', label: 'Payment History', icon: '💳', path: '/history' },
     ];
 
     const handleClick = (item) => {
