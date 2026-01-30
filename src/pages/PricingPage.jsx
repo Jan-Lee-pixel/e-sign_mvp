@@ -13,6 +13,43 @@ export default function PricingPage() {
     const [clientSecret, setClientSecret] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [isPro, setIsPro] = useState(false);
+    const [payments, setPayments] = useState([]);
+    const [checkingStatus, setCheckingStatus] = useState(true);
+
+    useEffect(() => {
+        checkStatus();
+        fetchPayments();
+    }, []);
+
+    const checkStatus = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            const { data } = await supabase
+                .from('profiles')
+                .select('subscription_status')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+            if (data?.subscription_status === 'pro') {
+                setIsPro(true);
+            }
+        }
+        setCheckingStatus(false);
+    };
+
+    const fetchPayments = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data, error } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false });
+
+        if (data) setPayments(data);
+    };
 
     const createPaymentIntent = async () => {
         setLoading(true);
@@ -32,7 +69,7 @@ export default function PricingPage() {
                 },
                 body: JSON.stringify({
                     userId: session.user.id,
-                    email: session.user.email // Pass email to server
+                    email: session.user.email
                 }),
             });
 
@@ -65,15 +102,19 @@ export default function PricingPage() {
         appearance,
     };
 
+    if (checkingStatus) {
+        return <div className="min-h-screen bg-[var(--template-bg-main)] flex items-center justify-center">Loading...</div>;
+    }
+
     return (
         <div className="min-h-screen bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
 
             <div className="max-w-3xl mx-auto text-center mb-12 animate-[fadeIn_0.8s_ease-out]">
                 <h2 className="font-['Crimson_Pro'] text-5xl font-semibold text-[var(--template-primary)] mb-4">
-                    Simple, Transparent Pricing
+                    {isPro ? "Your Subscription" : "Simple, Transparent Pricing"}
                 </h2>
                 <p className="text-xl text-[var(--template-text-secondary)]">
-                    Get full access to all e-sign features with our pro plan.
+                    {isPro ? "Manage your plan and view payment history." : "Get full access to all e-sign features with our pro plan."}
                 </p>
                 <button
                     onClick={() => window.history.back()}
@@ -83,72 +124,139 @@ export default function PricingPage() {
                 </button>
             </div>
 
-            {!clientSecret ? (
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-[var(--template-shadow-lg)] overflow-hidden border border-[var(--template-border)] animate-[scaleIn_0.5s_ease-out]">
-                    <div className="px-8 py-10">
-                        <h3 className="text-center text-3xl font-['Crimson_Pro'] font-semibold text-[var(--template-text-primary)]">Pro Plan</h3>
-                        <p className="text-center mt-2 text-[var(--template-text-light)]">Unlimited documents & signatures</p>
-
-                        <div className="mt-8 flex justify-center items-baseline text-[var(--template-primary)]">
-                            <span className="text-6xl font-['Crimson_Pro'] font-bold">$20</span>
-                            <span className="ml-2 text-xl font-medium text-[var(--template-text-secondary)]">/mo</span>
+            {isPro ? (
+                // PRO VIEW: Show Status + History
+                <div className="max-w-4xl w-full bg-white rounded-2xl shadow-[var(--template-shadow-lg)] overflow-hidden border border-[var(--template-border)] animate-[scaleIn_0.5s_ease-out] p-8">
+                    <div className="text-center mb-12">
+                        <div className="inline-block bg-gradient-to-r from-[var(--template-warning)] to-[#D69520] text-white text-sm font-bold px-4 py-2 rounded-full mb-6 shadow-sm">
+                            CURRENT PLAN: PRO
                         </div>
-
-                        <ul className="mt-8 space-y-4">
-                            {[
-                                "Unlimited Documents",
-                                "Audit Trails",
-                                "Priority Support",
-                                "Custom Branding",
-                                "Team Management"
-                            ].map((feature, i) => (
-                                <li key={i} className="flex items-center">
-                                    <div className="w-6 h-6 rounded-full bg-[var(--template-success)]/10 flex items-center justify-center mr-3 shrink-0">
-                                        <svg className="h-4 w-4 text-[var(--template-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[var(--template-text-primary)] font-medium">{feature}</span>
-                                </li>
-                            ))}
-                        </ul>
-
+                        <p className="text-[var(--template-text-secondary)] mb-8">
+                            You have access to all premium features including unlimited documents and audit trails.
+                        </p>
                         <button
-                            onClick={createPaymentIntent}
-                            disabled={loading}
-                            className="mt-10 w-full bg-gradient-to-r from-[var(--template-primary)] to-[var(--template-primary-light)] text-white rounded-xl py-4 px-6 text-lg font-semibold shadow-[var(--template-shadow-md)] hover:shadow-[var(--template-shadow-lg)] hover:-translate-y-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                            onClick={() => window.location.href = '/subscription'}
+                            className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 hover:border-red-300 rounded-xl py-3 px-6 font-semibold transition-all shadow-sm"
                         >
-                            {loading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></span>
-                                    Processing...
-                                </span>
-                            ) : "Get Started Now"}
+                            Manage / Cancel Subscription
                         </button>
+                    </div>
 
-                        {error && (
-                            <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100">
-                                {error}
+                    <div className="mt-12 border-t border-[var(--template-border)] pt-8">
+                        <h4 className="text-xl font-['Crimson_Pro'] font-semibold text-[var(--template-text-primary)] mb-6">Payment History</h4>
+                        {payments.length === 0 ? (
+                            <p className="text-[var(--template-text-light)] text-center italic">No payment history found.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-[var(--template-border)]">
+                                            <th className="pb-3 font-medium text-[var(--template-text-secondary)]">Date</th>
+                                            <th className="pb-3 font-medium text-[var(--template-text-secondary)]">Amount</th>
+                                            <th className="pb-3 font-medium text-[var(--template-text-secondary)]">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {payments.map((payment) => (
+                                            <tr key={payment.id} className="border-b last:border-0 border-[var(--template-border)] hover:bg-slate-50 transition-colors">
+                                                <td className="py-4 text-[var(--template-text-primary)]">
+                                                    {new Date(payment.created_at).toLocaleDateString(undefined, {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </td>
+                                                <td className="py-4 font-medium text-[var(--template-text-primary)]">
+                                                    {(payment.amount / 100).toLocaleString('en-US', {
+                                                        style: 'currency',
+                                                        currency: payment.currency.toUpperCase()
+                                                    })}
+                                                </td>
+                                                <td className="py-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${payment.status === 'succeeded'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-700'
+                                                        }`}>
+                                                        {payment.status.toUpperCase()}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>
                 </div>
             ) : (
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-[var(--template-shadow-lg)] overflow-hidden border border-[var(--template-border)] p-8 animate-[scaleIn_0.3s_ease]">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-2xl font-['Crimson_Pro'] font-semibold text-[var(--template-primary)]">Complete Payment</h3>
-                        <button
-                            onClick={() => setClientSecret(null)}
-                            className="text-sm text-[var(--template-text-light)] hover:text-[var(--template-text-primary)] transition-colors"
-                        >
-                            Cancel
-                        </button>
-                    </div>
+                // FREE VIEW: Show Pricing Card
+                !clientSecret ? (
+                    <div className="max-w-md w-full bg-white rounded-2xl shadow-[var(--template-shadow-lg)] overflow-hidden border border-[var(--template-border)] animate-[scaleIn_0.5s_ease-out]">
+                        <div className="px-8 py-10">
+                            <h3 className="text-center text-3xl font-['Crimson_Pro'] font-semibold text-[var(--template-text-primary)]">Pro Plan</h3>
+                            <p className="text-center mt-2 text-[var(--template-text-light)]">Unlimited documents & signatures</p>
 
-                    <Elements options={options} stripe={stripePromise}>
-                        <CheckoutForm />
-                    </Elements>
-                </div>
+                            <div className="mt-8 flex justify-center items-baseline text-[var(--template-primary)]">
+                                <span className="text-6xl font-['Crimson_Pro'] font-bold">$20</span>
+                                <span className="ml-2 text-xl font-medium text-[var(--template-text-secondary)]">/mo</span>
+                            </div>
+
+                            <ul className="mt-8 space-y-4">
+                                {[
+                                    "Unlimited Documents",
+                                    "Audit Trails",
+                                    "Priority Support",
+                                    "Custom Branding",
+                                    "Team Management"
+                                ].map((feature, i) => (
+                                    <li key={i} className="flex items-center">
+                                        <div className="w-6 h-6 rounded-full bg-[var(--template-success)]/10 flex items-center justify-center mr-3 shrink-0">
+                                            <svg className="h-4 w-4 text-[var(--template-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <span className="text-[var(--template-text-primary)] font-medium">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <button
+                                onClick={createPaymentIntent}
+                                disabled={loading}
+                                className="mt-10 w-full bg-gradient-to-r from-[var(--template-primary)] to-[var(--template-primary-light)] text-white rounded-xl py-4 px-6 text-lg font-semibold shadow-[var(--template-shadow-md)] hover:shadow-[var(--template-shadow-lg)] hover:-translate-y-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <span className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></span>
+                                        Processing...
+                                    </span>
+                                ) : "Get Started Now"}
+                            </button>
+
+                            {error && (
+                                <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100">
+                                    {error}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="max-w-md w-full bg-white rounded-2xl shadow-[var(--template-shadow-lg)] overflow-hidden border border-[var(--template-border)] p-8 animate-[scaleIn_0.3s_ease]">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-['Crimson_Pro'] font-semibold text-[var(--template-primary)]">Complete Payment</h3>
+                            <button
+                                onClick={() => setClientSecret(null)}
+                                className="text-sm text-[var(--template-text-light)] hover:text-[var(--template-text-primary)] transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                        <Elements options={options} stripe={stripePromise}>
+                            <CheckoutForm />
+                        </Elements>
+                    </div>
+                )
             )}
         </div>
     );

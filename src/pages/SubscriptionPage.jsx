@@ -8,7 +8,9 @@ export default function SubscriptionPage() {
     const [isPro, setIsPro] = useState(false); // Assume false initially, though only Pros can reach here ideally
     const [error, setError] = useState(null);
 
+    const [payments, setPayments] = useState([]);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     useEffect(() => {
         checkStatus();
@@ -75,15 +77,20 @@ export default function SubscriptionPage() {
                 throw new Error(errorData.error || "Failed to cancel subscription.");
             }
 
-            alert("Subscription cancelled successfully.");
-            navigate('/dashboard');
-            window.location.reload(); // Reload to refresh headers/state
+            // Show success modal instead of auto-redirecting
+            setShowSuccessModal(true);
         } catch (err) {
             console.error("Error cancelling subscription:", err);
             setError(err.message);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSuccessClose = () => {
+        setShowSuccessModal(false);
+        navigate('/dashboard');
+        window.location.reload();
     };
 
     return (
@@ -111,6 +118,30 @@ export default function SubscriptionPage() {
                                 Yes, Cancel
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 border border-[var(--template-border)] animate-[scaleIn_0.2s_ease-out] text-center">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h4 className="text-xl font-['Crimson_Pro'] font-bold text-gray-900 mb-2">
+                            Subscription Cancelled
+                        </h4>
+                        <p className="text-gray-600 mb-6">
+                            Your subscription has been successfully cancelled.
+                        </p>
+                        <button
+                            onClick={handleSuccessClose}
+                            className="w-full px-4 py-3 rounded-xl bg-[var(--template-primary)] text-white font-semibold hover:bg-[var(--template-primary-dark)] transition-colors shadow-sm"
+                        >
+                            Return to Dashboard
+                        </button>
                     </div>
                 </div>
             )}
