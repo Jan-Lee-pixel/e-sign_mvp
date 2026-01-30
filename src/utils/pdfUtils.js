@@ -15,7 +15,11 @@ export async function embedSignature({
     signatureImage,
     position,
     pageIndex,
-    visualWidth
+    signatureImage,
+    position,
+    pageIndex,
+    visualWidth,
+    ...params // Allow extra params like width/height
 }) {
     // Ensure buffer is Uint8Array
     const pdfBytes = new Uint8Array(pdfBuffer);
@@ -69,13 +73,21 @@ export async function embedSignature({
     const scaledX = position.x * scale;
     const scaledY = position.y * scale;
 
-    // Match UI height (50px)
-    const uiSignatureHeight = 50;
-    const signatureDims = embeddedImage.scale(1);
-    const aspectRatio = signatureDims.width / signatureDims.height;
+    let pdfSignatureWidth, pdfSignatureHeight;
 
-    const pdfSignatureHeight = uiSignatureHeight * scale;
-    const pdfSignatureWidth = pdfSignatureHeight * aspectRatio;
+    if (params.width && params.height) {
+        // Use provided explicit dimensions (scaled to PDF)
+        pdfSignatureWidth = params.width * scale;
+        pdfSignatureHeight = params.height * scale;
+    } else {
+        // Fallback to default
+        const uiSignatureHeight = 50;
+        const signatureDims = embeddedImage.scale(1);
+        const aspectRatio = signatureDims.width / signatureDims.height;
+
+        pdfSignatureHeight = uiSignatureHeight * scale;
+        pdfSignatureWidth = pdfSignatureHeight * aspectRatio;
+    }
 
     console.log(`EmbedSignature: Page ${pageIndex}, Rotation ${rotation}`);
     console.log(`Dims: PDF(${width}x${height}), Visual(${safeVisualWidth}), Scale(${scale})`);

@@ -4,11 +4,12 @@ import PDFUploader from '../components/PDFUploader';
 import PDFViewer from '../components/PDFViewer';
 import SignaturePad from '../components/SignaturePad';
 import DraggableSignature from '../components/DraggableSignature';
-import { embedSignature } from '../utils/pdfUtils';
+import { embedSignature, embedText } from '../utils/pdfUtils';
 import { supabase } from '../lib/supabase';
-import { PenTool, Download, LogOut, CheckCircle, Trash2, ArrowLeft, Loader2, UploadCloud } from 'lucide-react';
+import { PenTool, Download, LogOut, CheckCircle, Trash2, ArrowLeft, Loader2, UploadCloud, Stamp, Type, Calendar, CheckSquare } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
 import AlertModal from '../components/AlertModal';
+import TextInputModal from '../components/TextInputModal';
 import { Button } from '../components/ui/Button';
 
 // ... imports ...
@@ -21,16 +22,10 @@ function SelfSignPage({ session }) {
     const [pageNumber, setPageNumber] = useState(1);
     const [pageDimensions, setPageDimensions] = useState(null);
 
-    useEffect(() => {
-        if (location.state?.fileBuffer) {
-            handleUpload(location.state.fileBuffer);
-            // Clear state to prevent reloading on simple refesh if desirable, 
-            // though keeping it might be safer for now.
-            window.history.replaceState({}, document.title);
-        }
-    }, [location.state]);
+    // ... (useEffect for location.state)
 
     const handlePageLoad = (page) => {
+        // ... (handlePageLoad logic)
         const originalWidth = page.originalWidth;
         const originalHeight = page.originalHeight;
         const rotation = page.rotate || 0;
@@ -53,6 +48,58 @@ function SelfSignPage({ session }) {
     const [editingSignatureId, setEditingSignatureId] = useState(null);
 
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+    const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+    const [activeInputId, setActiveInputId] = useState(null); // For editing text
+    const [modalMode, setModalMode] = useState('Signature'); // 'Signature', 'Initial', 'Stamp'
+
+    const handleAddDate = () => {
+        const today = new Date().toLocaleDateString();
+        const newSig = {
+            id: crypto.randomUUID(),
+            type: 'date',
+            text: today,
+            x: 50,
+            y: 50,
+            page: pageNumber
+        };
+        setSignatures([...signatures, newSig]);
+    };
+
+    const handleAddText = () => {
+        const newSig = {
+            id: crypto.randomUUID(),
+            type: 'text',
+            text: 'Text',
+            x: 50,
+            y: 50,
+            page: pageNumber
+        };
+        setSignatures([...signatures, newSig]);
+        // Immediately open edit modal for convenience
+        setActiveInputId(newSig.id);
+        setIsInputModalOpen(true);
+    };
+
+    const handleAddCheckbox = () => {
+        const newSig = {
+            id: crypto.randomUUID(),
+            type: 'checkbox',
+            text: '', // 'X' or ''
+            x: 50,
+            y: 50,
+            page: pageNumber
+        };
+        setSignatures([...signatures, newSig]);
+    };
+
+    const handleInputSave = (val) => {
+        if (activeInputId) {
+            setSignatures(signatures.map(s => s.id === activeInputId ? { ...s, text: val } : s));
+            setActiveInputId(null);
+            setIsInputModalOpen(false);
+        }
+    };
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", onConfirm: () => { } });
@@ -76,6 +123,7 @@ function SelfSignPage({ session }) {
             // Add new signature
             const newSig = {
                 id: crypto.randomUUID(),
+                type: modalMode.toLowerCase(), // 'signature', 'initial', 'stamp'
                 image: dataURL,
                 x: 50,
                 y: 50,
@@ -87,12 +135,33 @@ function SelfSignPage({ session }) {
     };
 
     const handleEditSignature = (id) => {
-        setEditingSignatureId(id);
-        setIsSignatureModalOpen(true);
+        const sig = signatures.find(s => s.id === id);
+        if (!sig) return;
+
+        if (sig.type === 'text') {
+            setActiveInputId(id);
+            setIsInputModalOpen(true);
+        } else if (sig.type === 'checkbox') {
+            // Toggle checkbox
+            setSignatures(signatures.map(s => s.id === id ? { ...s, text: s.text === 'X' ? '' : 'X' } : s));
+        } else if (sig.type === 'date') {
+            // Maybe allow editing date text? For now just re-set to today or leave as is.
+            // Let's allow editing text for flexibility
+            setActiveInputId(id);
+            setIsInputModalOpen(true);
+        } else {
+            // Image types
+            setEditingSignatureId(id);
+            setIsSignatureModalOpen(true);
+        }
     };
 
     const updateSignaturePosition = (id, newPos) => {
         setSignatures(signatures.map(s => s.id === id ? { ...s, x: newPos.x, y: newPos.y } : s));
+    };
+
+    const updateSignatureSize = (id, newSize) => {
+        setSignatures(signatures.map(s => s.id === id ? { ...s, width: newSize.width, height: newSize.height } : s));
     };
 
     const removeSignature = (id) => {
@@ -143,13 +212,29 @@ function SelfSignPage({ session }) {
 
             // Embed ALL signatures
             for (const sig of signatures) {
-                currentPdfBuffer = await embedSignature({
-                    pdfBuffer: currentPdfBuffer,
-                    signatureImage: sig.image,
-                    position: { x: sig.x, y: sig.y },
-                    pageIndex: sig.page - 1,
-                    visualWidth: 600,
-                });
+                if (sig.type === 'signature' || sig.type === 'initial' || sig.type === 'stamp' || !sig.type) {
+                    currentPdfBuffer = await embedSignature({
+                        pdfBuffer: currentPdfBuffer,
+                        signatureImage: sig.image,
+                        position: { x: sig.x, y: sig.y },
+                        width: sig.width,
+                        height: sig.height,
+                        pageIndex: sig.page - 1,
+                        visualWidth: 600,
+                    });
+                } else {
+                    // Text, Date, Checkbox
+                    currentPdfBuffer = await embedText({
+                        pdfBuffer: currentPdfBuffer,
+                        text: sig.text || '',
+                        position: { x: sig.x, y: sig.y },
+                        width: sig.width, // Pass width/height if needed for multiline or scaling
+                        height: sig.height,
+                        pageIndex: sig.page - 1,
+                        visualWidth: 600,
+                        fontSize: sig.height ? Math.max(10, sig.height * 0.5) : 12 // Approximate font size from height
+                    });
+                }
             }
 
             const blob = new Blob([currentPdfBuffer], { type: 'application/pdf' });
@@ -254,13 +339,43 @@ function SelfSignPage({ session }) {
                                             Change File
                                         </Button>
                                     </div>
-                                    <div className="flex gap-2 mb-4">
+                                    <div className="grid grid-cols-1 gap-3 mb-4">
                                         <Button
-                                            onClick={() => setIsSignatureModalOpen(true)}
-                                            className="w-full justify-center bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-5"
+                                            onClick={() => {
+                                                setModalMode('Signature');
+                                                setIsSignatureModalOpen(true);
+                                            }}
+                                            className="w-full justify-start bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-4 px-4"
                                         >
-                                            <PenTool size={18} className="mr-2" />
+                                            <PenTool size={18} className="mr-3" />
                                             Add Signature
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                setModalMode('Initial');
+                                                setIsSignatureModalOpen(true);
+                                            }}
+                                            className="w-full justify-start bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-4 px-4"
+                                        >
+                                            <Type size={18} className="mr-3" />
+                                            Add Initial
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                setModalMode('Stamp');
+                                                setIsSignatureModalOpen(true);
+                                            }}
+                                            className="w-full justify-start bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-4 px-4"
+                                        >
+                                            <Stamp size={18} className="mr-3" />
+                                            Add Stamp
+                                        </Button>
+                                        <Button
+                                            onClick={handleAddText}
+                                            className="w-full justify-start bg-white border border-[var(--template-border)] text-[var(--template-text-primary)] hover:border-[var(--template-primary)] hover:text-[var(--template-primary)] hover:bg-[var(--template-bg-secondary)] shadow-sm transition-all py-4 px-3 text-sm"
+                                        >
+                                            <Type size={16} className="mr-2" />
+                                            Text
                                         </Button>
                                     </div>
 
@@ -316,8 +431,12 @@ function SelfSignPage({ session }) {
                                         <DraggableSignature
                                             key={sig.id}
                                             imageSrc={sig.image}
+                                            text={sig.text}
+                                            type={sig.type}
                                             initialPosition={{ x: sig.x, y: sig.y }}
+                                            initialSize={sig.width ? { width: sig.width, height: sig.height } : null}
                                             onPositionChange={(pos) => updateSignaturePosition(sig.id, pos)}
+                                            onResize={(size) => updateSignatureSize(sig.id, size)}
                                             onDelete={() => removeSignature(sig.id)}
                                             onEdit={() => handleEditSignature(sig.id)}
                                             containerDimensions={pageDimensions}
@@ -347,6 +466,7 @@ function SelfSignPage({ session }) {
                     }}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
                     userId={session?.user?.id}
+                    initialCategory={modalMode}
                 />
             )}
 
@@ -364,6 +484,13 @@ function SelfSignPage({ session }) {
                 title={alertModal.title}
                 message={alertModal.message}
                 type={alertModal.type}
+            />
+            <TextInputModal
+                isOpen={isInputModalOpen}
+                onClose={() => setIsInputModalOpen(false)}
+                onSave={handleInputSave}
+                label="Enter Text"
+                initialValue={activeInputId ? signatures.find(s => s.id === activeInputId)?.text : ''}
             />
         </div>
     );
