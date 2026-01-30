@@ -25,6 +25,10 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
         />;
     }
 
+    if (initialCategory === 'Stamp') {
+        return <StampMode onSave={onSave} onCancel={onCancel} onWarning={onWarning} userId={userId} />;
+    }
+
     return <StandardSignatureMode
         onSave={onSave}
         onCancel={onCancel}
@@ -33,6 +37,151 @@ const SignaturePad = ({ onSave, onCancel, onWarning, userId, initialCategory = '
         initialCategory={initialCategory}
         categories={categories}
     />;
+};
+
+// --- STAMP MODE ---
+const StampMode = ({ onSave, onCancel, onWarning, userId }) => {
+    const [activeTab, setActiveTab] = useState('upload');
+    const [savedStamps, setSavedStamps] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (userId && activeTab === 'saved') {
+            fetchStamps();
+        }
+    }, [userId, activeTab]);
+
+    const fetchStamps = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('signatures')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('category', 'Stamp')
+            .order('created_at', { ascending: false });
+
+        if (data) setSavedStamps(data);
+        setLoading(false);
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            if (onWarning) onWarning("File is too large (max 2MB)");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const dataURL = e.target.result;
+
+            // Auto-save to profile for stamps
+            if (userId) {
+                await supabase.from('signatures').insert([{
+                    user_id: userId,
+                    signature_url: dataURL,
+                    category: 'Stamp' // Explicit stamp category
+                }]);
+            }
+            onSave(dataURL);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleSelectSaved = (url) => onSave(url);
+
+    const handleDeleteSaved = async (id, e) => {
+        e.stopPropagation();
+        if (!confirm("Delete this stamp?")) return;
+        const { error } = await supabase.from('signatures').delete().eq('id', id);
+        if (!error) setSavedStamps(prev => prev.filter(s => s.id !== id));
+    };
+
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in duration-200 font-['DM_Sans']">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                    <h3 className="text-lg font-bold text-gray-900">Add Stamp</h3>
+                    <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 text-gray-500">
+                        <X size={20} />
+                    </Button>
+                </div>
+
+                {userId && (
+                    <div className="flex border-b border-gray-100">
+                        <button
+                            onClick={() => setActiveTab('upload')}
+                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'upload' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            Upload Stamp
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('saved')}
+                            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === 'saved' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            <LayoutGrid size={16} />
+                            Saved Stamps
+                        </button>
+                    </div>
+                )}
+
+                <div className="p-6 overflow-y-auto">
+                    {activeTab === 'upload' ? (
+                        <div className="space-y-6">
+                            <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary hover:bg-blue-50/30 transition-all group relative">
+                                <input
+                                    type="file"
+                                    accept="image/png, image/jpeg"
+                                    onChange={handleFileUpload}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <div className="h-12 w-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-1">Click to upload or drag and drop</h4>
+                                <p className="text-xs text-gray-500">PNG, JPG up to 2MB</p>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700">
+                                <strong>Tip:</strong> For best results, use a transparent PNG image of your stamp or seal.
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {loading ? (
+                                <div className="py-10 text-center text-gray-400">Loading saved stamps...</div>
+                            ) : savedStamps.length === 0 ? (
+                                <div className="py-10 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+                                    <div className="mx-auto h-10 w-10 text-gray-300 mb-2">
+                                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    </div>
+                                    <p>No saved stamps found.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3">
+                                    {savedStamps.map((stamp) => (
+                                        <div key={stamp.id} className="relative border border-gray-200 rounded-lg p-2 hover:border-primary cursor-pointer bg-white aspect-square flex items-center justify-center group" onClick={() => handleSelectSaved(stamp.signature_url)}>
+                                            <img src={stamp.signature_url} alt="Stamp" className="max-w-full max-h-full object-contain" />
+                                            <button
+                                                onClick={(e) => handleDeleteSaved(stamp.id, e)}
+                                                className="absolute top-2 right-2 p-1 bg-white text-red-500 rounded-md opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100 hover:bg-red-50 transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 };
 
 // --- INITIAL ADOPTION MODE (DocuSign Style) ---

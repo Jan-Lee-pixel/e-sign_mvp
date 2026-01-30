@@ -420,7 +420,11 @@ const RecipientSignPage = () => {
                     onCancel={() => setIsSignatureModalOpen(false)}
                     onWarning={(msg) => setAlertModal({ isOpen: true, title: "Drawing Required", message: msg, type: "info" })}
                     userId={userId}
-                    initialCategory={activeField?.type === 'initial' ? 'Initial' : 'Signature'}
+                    initialCategory={
+                        activeField?.type === 'initial' ? 'Initial' :
+                            activeField?.type === 'stamp' ? 'Stamp' :
+                                'Signature'
+                    }
                 />
             )}
 
