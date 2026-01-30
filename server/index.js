@@ -58,6 +58,23 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                     console.log('Payment event logged successfully.');
                 }
 
+                // Log into payments table (Customer History)
+                const { error: paymentError } = await supabase
+                    .from('payments')
+                    .insert({
+                        stripe_payment_id: paymentIntent.id,
+                        amount: paymentIntent.amount,
+                        currency: paymentIntent.currency,
+                        status: paymentIntent.status,
+                        user_id: userId
+                    });
+
+                if (paymentError) {
+                    console.error('Error logging payment history:', paymentError);
+                } else {
+                    console.log('Payment history saved.');
+                }
+
 
                 const { error } = await supabase
                     .from('profiles')
