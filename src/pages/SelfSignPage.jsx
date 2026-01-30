@@ -11,6 +11,10 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import AlertModal from '../components/AlertModal';
 import TextInputModal from '../components/TextInputModal';
 import { Button } from '../components/ui/Button';
+import { secureAiService } from '../services/secureAiService';
+import ReactMarkdown from 'react-markdown';
+import Draggable from 'react-draggable';
+import { Sparkles, X } from 'lucide-react';
 
 // ... imports ...
 
@@ -21,6 +25,12 @@ function SelfSignPage({ session }) {
     const [pdfBuffer, setPdfBuffer] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageDimensions, setPageDimensions] = useState(null);
+
+    // AI Summary State
+    const [aiSummary, setAiSummary] = useState(null);
+    const [isSummarizing, setIsSummarizing] = useState(false);
+    const [showSummary, setShowSummary] = useState(false);
+    const draggableRef = React.useRef(null);
 
     // ... (useEffect for location.state)
 
@@ -258,6 +268,31 @@ function SelfSignPage({ session }) {
         await supabase.auth.signOut();
     };
 
+    const handleSummarize = async () => {
+        if (!pdfBuffer) return;
+
+        // If we already have a summary, just show it
+        if (aiSummary) {
+            setShowSummary(true);
+            return;
+        }
+
+        setIsSummarizing(true);
+        setShowSummary(true); // Open the window so they see the loading state
+
+        try {
+            const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+            const summary = await secureAiService.analyzeDocument(blob);
+            setAiSummary(summary);
+        } catch (err) {
+            console.error("AI Summary Error:", err);
+            setAlertModal({ isOpen: true, title: "AI Error", message: "Failed to generate summary.", type: "error" });
+            setShowSummary(false); // Close on error
+        } finally {
+            setIsSummarizing(false);
+        }
+    };
+
     return (
         <div className="h-screen w-screen flex flex-col overflow-hidden bg-[var(--template-bg-main)] font-['DM_Sans'] text-[var(--template-text-primary)]">
             {/* Header */}
@@ -330,7 +365,7 @@ function SelfSignPage({ session }) {
                                     <h3 className="text-xs font-bold text-[var(--template-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
                                         <PenTool size={14} /> Signatures
                                     </h3>
-                                    <div className="flex gap-2 mb-4">
+                                    <div className="flex gap-2 mb-6">
                                         <Button
                                             onClick={handleChangeFile}
                                             className="w-full justify-center bg-white border border-[var(--template-border)] text-red-500 hover:border-red-500 hover:bg-red-50 shadow-sm transition-all py-5 mb-3"
@@ -339,6 +374,23 @@ function SelfSignPage({ session }) {
                                             Change File
                                         </Button>
                                     </div>
+
+                                    {/* App-Consistent AI Summary Section */}
+                                    <div className="mb-6 bg-[var(--template-bg-secondary)]/30 p-4 rounded-xl border border-[var(--template-border)]">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="text-[10px] uppercase tracking-wider text-[var(--template-text-light)] font-bold">Document Analysis</label>
+                                            <button
+                                                onClick={handleSummarize}
+                                                className="text-[10px] flex items-center gap-1 text-[var(--template-primary)] hover:underline font-bold bg-[var(--template-primary)]/5 hover:bg-[var(--template-primary)]/10 px-2 py-1 rounded-full transition-colors"
+                                            >
+                                                <Sparkles size={10} /> {aiSummary ? 'Show Summary' : 'AI Summarize'}
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-[var(--template-text-light)] italic">
+                                            Generate a smart summary of this document.
+                                        </p>
+                                    </div>
+
                                     <div className="grid grid-cols-1 gap-3 mb-4">
                                         <Button
                                             onClick={() => {
@@ -456,6 +508,55 @@ function SelfSignPage({ session }) {
                     )}
                 </main>
             </div>
+
+            {/* Floating AI Summary Window */}
+            {showSummary && (
+                <Draggable bounds="parent" handle=".handle" nodeRef={draggableRef}>
+                    <div ref={draggableRef} className="absolute top-20 right-20 z-50 w-80 bg-white/90 backdrop-blur-xl rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 ring-1 ring-black/5 animate-[scaleIn_0.2s_ease-out]">
+                        {/* Window Header */}
+                        <div className="handle flex items-center justify-between p-4 border-b border-black/5 cursor-move active:cursor-grabbing">
+                            <div className="flex items-center gap-2 text-[var(--template-primary)] font-bold font-['Crimson_Pro'] uppercase tracking-widest text-xs">
+                                <Sparkles size={14} />
+                                <span>AI Summary</span>
+                            </div>
+                            <button
+                                onClick={() => setShowSummary(false)}
+                                className="text-[var(--template-text-light)] hover:text-[var(--template-text-primary)] hover:bg-black/5 rounded-full p-1 transition-colors"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Window Content */}
+                        <div className="p-4 max-h-[60vh] overflow-y-auto">
+                            {isSummarizing ? (
+                                <div className="flex flex-col items-center justify-center py-8 gap-3 text-[var(--template-text-light)] animate-pulse">
+                                    <Sparkles size={24} className="text-[var(--template-primary)]" />
+                                    <span className="text-xs">Analyzing document...</span>
+                                </div>
+                            ) : (
+                                <div className="text-sm text-[var(--template-text-secondary)] leading-relaxed prose prose-sm prose-p:my-2 prose-headings:my-2 prose-strong:text-[var(--template-primary-dark)]">
+                                    <ReactMarkdown>
+                                        {aiSummary}
+                                    </ReactMarkdown>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Window Footer */}
+                        {!isSummarizing && aiSummary && (
+                            <div className="p-3 bg-[var(--template-bg-secondary)]/50 border-t border-black/5 rounded-b-xl flex justify-end">
+                                <button
+                                    onClick={handleSummarize}
+                                    className="text-[10px] text-[var(--template-text-light)] hover:text-[var(--template-primary)] flex items-center gap-1 transition-colors"
+                                >
+                                    <Sparkles size={10} /> Regenerate
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </Draggable>
+            )}
 
             {isSignatureModalOpen && (
                 <SignaturePad
