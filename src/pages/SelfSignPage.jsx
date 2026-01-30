@@ -32,7 +32,13 @@ function SelfSignPage({ session }) {
     const [showSummary, setShowSummary] = useState(false);
     const draggableRef = React.useRef(null);
 
-    // ... (useEffect for location.state)
+    useEffect(() => {
+        if (location.state && location.state.fileBuffer) {
+            const buffer = location.state.fileBuffer;
+            setPdfFile(buffer);
+            setPdfBuffer(buffer);
+        }
+    }, [location.state]);
 
     const handlePageLoad = (page) => {
         // ... (handlePageLoad logic)
