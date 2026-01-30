@@ -8,28 +8,12 @@ export default function SubscriptionPage() {
     const [isPro, setIsPro] = useState(false); // Assume false initially, though only Pros can reach here ideally
     const [error, setError] = useState(null);
 
-    const [payments, setPayments] = useState([]);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     useEffect(() => {
         checkStatus();
-        fetchPayments();
     }, []);
-
-    const fetchPayments = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-
-        const { data, error } = await supabase
-            .from('payments')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .order('created_at', { ascending: false });
-
-        if (data) setPayments(data);
-        if (error) console.error("Error fetching payments:", error);
-    };
 
     const checkStatus = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -194,52 +178,14 @@ export default function SubscriptionPage() {
                         </div>
                     )}
 
-                    {/* Payment History Section */}
-                    <div className="mt-12 border-t border-[var(--template-border)] pt-8">
-                        <h4 className="text-xl font-['Crimson_Pro'] font-semibold text-[var(--template-text-primary)] mb-6">Payment History</h4>
-
-                        {payments.length === 0 ? (
-                            <p className="text-[var(--template-text-light)] text-center italic">No payment history found.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="border-b border-[var(--template-border)]">
-                                            <th className="pb-3 font-medium text-[var(--template-text-secondary)]">Date</th>
-                                            <th className="pb-3 font-medium text-[var(--template-text-secondary)]">Amount</th>
-                                            <th className="pb-3 font-medium text-[var(--template-text-secondary)]">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {payments.map((payment) => (
-                                            <tr key={payment.id} className="border-b last:border-0 border-[var(--template-border)] hover:bg-slate-50 transition-colors">
-                                                <td className="py-4 text-[var(--template-text-primary)]">
-                                                    {new Date(payment.created_at).toLocaleDateString(undefined, {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    })}
-                                                </td>
-                                                <td className="py-4 font-medium text-[var(--template-text-primary)]">
-                                                    {(payment.amount / 100).toLocaleString('en-US', {
-                                                        style: 'currency',
-                                                        currency: payment.currency.toUpperCase()
-                                                    })}
-                                                </td>
-                                                <td className="py-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${payment.status === 'succeeded'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-700'
-                                                        }`}>
-                                                        {payment.status.toUpperCase()}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                    {/* Payment History Link */}
+                    <div className="mt-12 border-t border-[var(--template-border)] pt-8 text-center">
+                        <button
+                            onClick={() => navigate('/history')}
+                            className="text-[var(--template-primary)] font-semibold hover:text-[var(--template-primary-dark)] underline underline-offset-4 transition-colors flex items-center justify-center gap-2 mx-auto"
+                        >
+                            <span>💳</span> View Payment History
+                        </button>
                     </div>
                 </div>
             </div>
