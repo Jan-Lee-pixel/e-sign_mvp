@@ -40,7 +40,7 @@ export default function SubscriptionPage() {
             .from('profiles')
             .select('subscription_status')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
         if (data?.subscription_status === 'pro') {
             setIsPro(true);
@@ -173,8 +173,8 @@ export default function SubscriptionPage() {
                                                 </td>
                                                 <td className="py-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold ${payment.status === 'succeeded'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-gray-100 text-gray-700'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-700'
                                                         }`}>
                                                         {payment.status.toUpperCase()}
                                                     </span>

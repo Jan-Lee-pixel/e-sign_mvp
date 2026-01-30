@@ -44,7 +44,7 @@ const DashboardPage = ({ session }) => {
                 .from('profiles')
                 .select('subscription_status')
                 .eq('id', session.user.id)
-                .single();
+                .maybeSingle();
 
             if (data && data.subscription_status === 'pro') {
                 setIsPro(true);
