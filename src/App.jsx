@@ -18,18 +18,33 @@ function App() {
     const [loadingSession, setLoadingSession] = useState(true);
 
     useEffect(() => {
+        let mounted = true;
+
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setLoadingSession(false);
+            if (mounted) {
+                setSession(session);
+                setLoadingSession(false);
+            }
+        }).catch((err) => {
+            console.warn("Error fetching session:", err);
+            if (mounted) {
+                setLoadingSession(false);
+            }
         });
 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
+            if (mounted) {
+                setSession(session);
+                setLoadingSession(false);
+            }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     if (loadingSession) {
