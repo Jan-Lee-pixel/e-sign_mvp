@@ -15,6 +15,7 @@ import FieldsSidebar from '../components/FieldsSidebar';
 import ShareModal from '../components/ShareModal';
 import emailjs from '@emailjs/browser';
 import { secureAiService } from '../services/secureAiService';
+import { auditService } from '../services/auditService';
 import ReactMarkdown from 'react-markdown';
 import Draggable from 'react-draggable';
 import { Sparkles, X } from 'lucide-react';
@@ -310,6 +311,13 @@ const ComposePage = () => {
                     .insert(fieldsToInsert);
 
                 if (fieldsError) throw fieldsError;
+
+                // AUDIT LOGGING
+                const { data: { user } } = await supabase.auth.getUser();
+                await auditService.logEvent(envelopeData.id, 'CREATED', {
+                    name: user?.user_metadata?.full_name || 'Sender',
+                    email: user?.email
+                });
 
                 setGeneratedLink(`${window.location.origin}/sign/${accessToken}`);
                 setIsShareModalOpen(true);

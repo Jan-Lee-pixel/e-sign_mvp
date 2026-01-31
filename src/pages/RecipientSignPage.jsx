@@ -9,6 +9,7 @@ import AlertModal from '../components/AlertModal';
 import TextInputModal from '../components/TextInputModal';
 import { Button } from '../components/ui/Button';
 import { secureAiService } from '../services/secureAiService';
+import { auditService } from '../services/auditService';
 import ReactMarkdown from 'react-markdown';
 import Draggable from 'react-draggable';
 
@@ -59,6 +60,12 @@ const RecipientSignPage = () => {
 
             let envelope = Array.isArray(data) ? data[0] : data;
             setEnvelopeData(envelope);
+
+            // LOG VIEWED
+            auditService.logEvent(envelope.id, 'VIEWED', {
+                name: 'Guest Recipient',
+                email: null
+            });
 
             const { data: fileData, error: fileError } = await supabase.storage
                 .from('envelopes')
@@ -268,6 +275,12 @@ const RecipientSignPage = () => {
             });
 
             if (rpcError) throw rpcError;
+
+            // LOG COMPLETED
+            await auditService.logEvent(envelopeData.id, 'COMPLETED', {
+                name: signedFields['name'] || 'Recipient',
+                email: signedFields['email'] || null
+            });
 
             setIsComplete(true);
         } catch (err) {

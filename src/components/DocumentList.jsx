@@ -1,7 +1,7 @@
 import React from 'react';
-import { Download, Pencil, Trash2 } from 'lucide-react';
+import { Download, Pencil, Trash2, Shield } from 'lucide-react';
 
-const DocumentList = ({ envelopes, loading, onRowClick, onDownload, onRename }) => {
+const DocumentList = ({ envelopes, loading, onRowClick, onDownload, onRename, onAuditTrail }) => {
     return (
         <div className="bg-white rounded-2xl p-8 shadow-[var(--template-shadow-sm)] border border-[var(--template-border)]">
             <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-[var(--template-bg-secondary)]">
@@ -60,6 +60,13 @@ const DocumentList = ({ envelopes, loading, onRowClick, onDownload, onRename }) 
                                     title="Rename"
                                 >
                                     <Pencil size={16} />
+                                </button>
+                                <button
+                                    onClick={() => onAuditTrail && onAuditTrail(env)}
+                                    className="w-9 h-9 border border-[var(--template-border)] bg-white rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 text-[var(--template-text-secondary)] hover:bg-[var(--template-primary)] hover:text-white hover:border-[var(--template-primary)] hover:scale-110"
+                                    title="View Audit Trail"
+                                >
+                                    <Shield size={16} />
                                 </button>
                             </div>
                         </div>
