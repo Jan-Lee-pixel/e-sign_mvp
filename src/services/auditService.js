@@ -3,7 +3,7 @@
  * All logs are sent to the server to capture reliable IP addresses.
  */
 
-const API_URL = 'http://localhost:4242';
+const API_URL = `http://${window.location.hostname}:4242`;
 
 export const auditService = {
     /**
@@ -14,7 +14,7 @@ export const auditService = {
      */
     logEvent: async (envelopeId, action, actor = {}) => {
         try {
-            await fetch(`${API_URL}/audit-log`, {
+            const res = await fetch(`${API_URL}/audit-log`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -26,6 +26,11 @@ export const auditService = {
                     actorEmail: actor.email || null
                 }),
             });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                console.error('[Audit] Server returned error:', res.status, errData);
+            }
         } catch (error) {
             // We generally don't want to block the user if logging fails, but we should record it.
             console.error('[Audit] Failed to log event:', error);

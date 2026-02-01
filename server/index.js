@@ -374,6 +374,7 @@ app.post('/audit-log', async (req, res) => {
         const userAgent = req.get('User-Agent');
 
         if (!envelopeId || !action) {
+            logError('Audit log missing fields:', { body: req.body });
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -436,6 +437,37 @@ app.get('/audit-logs/:envelopeId', async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint to fetch envelope by token (used for signing page)
+app.get('/envelope/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        if (!token) return res.status(400).json({ error: 'Missing token' });
+
+        const supabase = createClient(
+            process.env.VITE_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
+        // Fetch envelope securely WITH fields
+        const { data, error } = await supabase
+            .from('envelopes')
+            .select('*, fields(*)')
+            .eq('access_token', token)
+            .single();
+
+        if (error) {
+            logError('Error fetching envelope:', error);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (!data) return res.status(404).json({ error: 'Envelope not found' });
+
+        res.json(data);
+    } catch (error) {
+        logError('Unexpected error fetching envelope:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 

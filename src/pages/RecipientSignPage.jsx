@@ -53,19 +53,21 @@ const RecipientSignPage = () => {
     const fetchEnvelope = async () => {
         try {
             setLoading(true);
-            const { data, error } = await supabase.rpc('get_envelope_by_token', { token_input: token });
+            // Fetch via backend to ensure we get the full ID and bypass potentially limited/broken RPC
+            const apiRes = await fetch(`http://${window.location.hostname}:4242/envelope/${token}`);
+            if (!apiRes.ok) throw new Error('Failed to load envelope details');
 
-            if (error) throw error;
-            if (!data) throw new Error("Envelope not found");
+            const envelope = await apiRes.json();
 
-            let envelope = Array.isArray(data) ? data[0] : data;
             setEnvelopeData(envelope);
 
             // LOG VIEWED
-            auditService.logEvent(envelope.id, 'VIEWED', {
-                name: 'Guest Recipient',
-                email: null
-            });
+            if (envelope && envelope.id) {
+                auditService.logEvent(envelope.id, 'VIEWED', {
+                    name: 'Guest Recipient',
+                    email: null
+                });
+            }
 
             const { data: fileData, error: fileError } = await supabase.storage
                 .from('envelopes')
@@ -277,9 +279,16 @@ const RecipientSignPage = () => {
             if (rpcError) throw rpcError;
 
             // LOG COMPLETED
+            // Find name/email fields to identify the signer
+            const nameField = fields.find(f => f.type === 'name' || (f.type === 'text' && f.label?.toLowerCase().includes('name')));
+            const emailField = fields.find(f => f.type === 'email' || (f.type === 'text' && f.label?.toLowerCase().includes('email')));
+
+            const actorName = (nameField && signedFields[nameField.id]) ? signedFields[nameField.id] : 'Guest Recipient';
+            const actorEmail = (emailField && signedFields[emailField.id]) ? signedFields[emailField.id] : null;
+
             await auditService.logEvent(envelopeData.id, 'COMPLETED', {
-                name: signedFields['name'] || 'Recipient',
-                email: signedFields['email'] || null
+                name: actorName,
+                email: actorEmail
             });
 
             setIsComplete(true);
@@ -305,7 +314,8 @@ const RecipientSignPage = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="px-4 py-2 bg-[var(--template-bg-secondary)] rounded-lg text-sm text-[var(--template-text-primary)] border border-[var(--template-border)] font-medium shadow-sm">
+
+                    <div className="bg-[var(--template-bg-secondary)] rounded-lg text-sm text-[var(--template-text-primary)] border border-[var(--template-border)] font-medium shadow-sm px-4 py-2">
                         {completedFieldsCount} / {totalFieldsCount} Signed
                     </div>
                     <Button
