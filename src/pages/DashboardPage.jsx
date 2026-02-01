@@ -8,6 +8,7 @@ import Header from '../components/Header';
 import StatsGrid from '../components/StatsGrid';
 import DocumentList from '../components/DocumentList';
 import TutorialModal from '../components/TutorialModal';
+import AuditTrailModal from '../components/AuditTrailModal';
 
 const DashboardPage = ({ session }) => {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ const DashboardPage = ({ session }) => {
     // Modals
     const [promptModal, setPromptModal] = useState({ isOpen: false, title: "", message: "", defaultValue: "", onConfirm: () => { } });
     const [alertModal, setAlertModal] = useState({ isOpen: false, title: "", message: "", type: "error" });
+    const [auditModal, setAuditModal] = useState({ isOpen: false, envelope: null });
 
     useEffect(() => {
         if (!session) return;
@@ -220,6 +222,7 @@ const DashboardPage = ({ session }) => {
                             onRowClick={handleRowClick}
                             onDownload={downloadSignedPdf}
                             onRename={handleRenameClick}
+                            onAuditTrail={(env) => setAuditModal({ isOpen: true, envelope: env })}
                         />
                     </main>
                 </div>
@@ -239,6 +242,12 @@ const DashboardPage = ({ session }) => {
                 defaultValue={promptModal.defaultValue}
             />
 
+            <AuditTrailModal
+                isOpen={auditModal.isOpen}
+                onClose={() => setAuditModal({ isOpen: false, envelope: null })}
+                envelope={auditModal.envelope}
+            />
+
             <AlertModal
                 isOpen={alertModal.isOpen}
                 onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
@@ -246,6 +255,7 @@ const DashboardPage = ({ session }) => {
                 message={alertModal.message}
                 type={alertModal.type}
             />
+
         </div>
     );
 };
