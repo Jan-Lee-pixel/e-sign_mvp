@@ -643,7 +643,10 @@ const ComposePage = () => {
 
             <SuccessModal
                 isOpen={isSuccessModalOpen}
-                onClose={() => setIsSuccessModalOpen(false)}
+                onClose={() => {
+                    setIsSuccessModalOpen(false);
+                    navigate('/dashboard');
+                }}
                 title={editingEnvelope ? "Changes Saved" : "Email Sent"}
                 message={editingEnvelope
                     ? "Your changes have been saved. The existing link matches the new version."
