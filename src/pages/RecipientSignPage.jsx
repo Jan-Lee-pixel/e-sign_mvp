@@ -46,8 +46,13 @@ const RecipientSignPage = () => {
         });
     }, []);
 
+    // Track if we've already logged the view for this session
+    const hasLoggedViewRef = React.useRef(false);
+
     useEffect(() => {
         fetchEnvelope();
+        // Reset log ref if token changes (though usually token change means new page load)
+        return () => { hasLoggedViewRef.current = false; };
     }, [token]);
 
     const fetchEnvelope = async () => {
@@ -61,11 +66,13 @@ const RecipientSignPage = () => {
 
             setEnvelopeData(envelope);
 
-            // LOG VIEWED
-            if (envelope && envelope.id) {
+            // LOG VIEWED - Only if not already logged
+            if (envelope && envelope.id && !hasLoggedViewRef.current) {
+                console.log("Logging VIEWED event...");
+                hasLoggedViewRef.current = true; // Mark as logged immediately
                 auditService.logEvent(envelope.id, 'VIEWED', {
                     name: 'Guest Recipient',
-                    email: null
+                    email: envelope.recipient_email || null
                 });
             }
 
@@ -284,7 +291,7 @@ const RecipientSignPage = () => {
             const emailField = fields.find(f => f.type === 'email' || (f.type === 'text' && f.label?.toLowerCase().includes('email')));
 
             const actorName = (nameField && signedFields[nameField.id]) ? signedFields[nameField.id] : 'Guest Recipient';
-            const actorEmail = (emailField && signedFields[emailField.id]) ? signedFields[emailField.id] : null;
+            const actorEmail = (emailField && signedFields[emailField.id]) ? signedFields[emailField.id] : envelopeData.recipient_email;
 
             await auditService.logEvent(envelopeData.id, 'COMPLETED', {
                 name: actorName,

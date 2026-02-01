@@ -350,6 +350,19 @@ const ComposePage = () => {
                 message: customMessage
             };
 
+            // Update envelope with recipient email
+            if (generatedLink) {
+                // Extract token from link to identify envelope
+                const token = generatedLink.split('/').pop();
+
+                const { error: updateError } = await supabase
+                    .from('envelopes')
+                    .update({ recipient_email: recipientEmail })
+                    .eq('access_token', token);
+
+                if (updateError) console.error("Failed to save recipient email:", updateError);
+            }
+
             await emailjs.send(
                 'service_3l72yzv',
                 'template_dupsafc',
